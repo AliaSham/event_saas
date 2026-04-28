@@ -1,0 +1,65 @@
+/* GENERAL LINK RESET */
+a {
+    text-decoration: none;
+    color: black;
+}
+
+/* BUTTON BASE */
+.btn {
+    padding: 6px 12px;
+    border-radius: 5px;
+    font-size: 14px;
+    margin-left: 5px;
+    display: inline-block;
+}
+
+/* ADD BUTTON */
+.btn-add {
+    background-color: #28a745;
+    color: white;
+}
+
+/* EDIT BUTTON */
+.btn-edit {
+    background-color: #007bff;
+    color: white;
+}
+
+/* DELETE BUTTON */
+.btn-delete {
+    background-color: #dc3545;
+    color: white;
+}
+
+/* HOVER EFFECT */
+.btn:hover {
+    opacity: 0.85;
+}
+
+/* MODAL OVERLAY */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+}
+
+/* MODAL BOX */
+.modal-box {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 300px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+/* MODAL BUTTONS */
+.modal-actions {
+    margin-top: 15px;
+}
