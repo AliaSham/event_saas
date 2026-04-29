@@ -2,22 +2,25 @@
 session_start();
 include('../config/db.php');
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+$error = "";
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     $email = $_POST['email'];
     $password = $_POST['password'];
 
-    $query = "SELECT * FROM users WHERE email='$email'";
+    $query = "SELECT * FROM users WHERE email='$email' AND password='$password'";
     $result = mysqli_query($conn, $query);
-    $user = mysqli_fetch_assoc($result);
 
-    if ($user && $password == $user['password']) {
+    if (mysqli_num_rows($result) == 1) {
+
+        $user = mysqli_fetch_assoc($result);
 
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['role'] = $user['role'];
         $_SESSION['company_id'] = $user['company_id'];
 
-        // SaaS check untuk user yang ada company_id
+        // SaaS check
         if ($user['company_id'] != NULL) {
             $company_id = $user['company_id'];
 
@@ -28,45 +31,75 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $company = mysqli_fetch_assoc($company_query);
 
             if (!$company || $company['subscription_status'] != 'Active') {
-                echo "Subscription inactive";
-                exit;
+                $error = "Subscription inactive";
             }
         }
 
-        // ROLE-BASED REDIRECT
-        if ($user['role'] == 'admin') {
-            header("Location: ../admin/dashboard.php");
-            exit;
+        // Redirect ikut role
+        if ($error == "") {
+            if ($user['role'] == 'admin') {
+                header("Location: ../admin/dashboard.php");
+                exit;
 
-        } elseif ($user['role'] == 'customer') {
-            header("Location: ../customer/dashboard.php");
-            exit;
+            } elseif ($user['role'] == 'customer') {
+                header("Location: ../customer/dashboard.php");
+                exit;
 
-        } elseif ($user['role'] == 'vendor') {
-            header("Location: ../vendor/dashboard.php");
-            exit;
+            } elseif ($user['role'] == 'vendor') {
+                header("Location: ../vendor/dashboard.php");
+                exit;
 
-        } else {
-            echo "Invalid role";
+            } else {
+                $error = "Invalid role";
+            }
         }
 
     } else {
-        echo "Invalid email or password";
+        $error = "Invalid email or password";
     }
 }
 ?>
 
-<h2>Login</h2>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
 
-<form method="POST">
-    <input type="email" name="email" placeholder="Email" required><br><br>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/event_saas/assets/css/style.css">
+</head>
 
-    <input type="password" name="password" placeholder="Password" required><br><br>
+<body>
 
-    <button type="submit">Login</button>
-</form>
+<div class="login-wrapper">
 
-<br>
+    <div class="overlay"></div>
 
-<p>Don't have an account?</p>
-<a href="register.php">Register here</a>
+    <h1 class="hello-text">hello</h1>
+
+    <div class="login-box">
+        <div class="login-box-inner">
+
+            <h2>Login</h2>
+
+            <?php if ($error != "") { ?>
+                <p style="color:red;"><?php echo $error; ?></p>
+            <?php } ?>
+
+            <form method="POST">
+                <input type="email" name="email" placeholder="Enter Email" required>
+                <input type="password" name="password" placeholder="Enter Password" required>
+
+                <button class="btn btn-primary">Login</button>
+            </form>
+
+            <br>
+            <a href="register.php">Don't have an account? Register</a>
+
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>
