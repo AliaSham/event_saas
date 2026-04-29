@@ -1,5 +1,5 @@
 <?php
-include "config.php";
+include "../config/db.php";
 
 if(isset($_POST['register'])){
 
@@ -52,9 +52,9 @@ if(isset($_POST['register'])){
     <label>
         <input type="checkbox" name="agree" required>
         I agree to the 
-        <a href="privacy/privacy.php" target="_blank">Privacy Policy</a> 
+        <a href="../privacy/privacy.php" target="_blank">Privacy Policy</a> 
         and 
-        <a href="privacy/terms.php" target="_blank">Terms & Conditions</a>
+        <a href="../privacy/terms.php" target="_blank">Terms & Conditions</a>
     </label>
     <br><br>
 
