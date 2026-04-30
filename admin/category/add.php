@@ -3,7 +3,6 @@ session_start();
 include('../../config/db.php');
 include('../header.php');
 
-// PROTECT PAGE
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../../auth/login.php");
     exit;
@@ -11,54 +10,50 @@ if (!isset($_SESSION['user_id'])) {
 
 $company_id = $_SESSION['company_id'];
 
-// PREDEFINED OPTIONS
 $categories = ["Wedding", "Birthday", "Corporate", "Engagement", "Party"];
 
 $error = "";
-$success = "";
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-    if (!empty($_POST['category_name'])) {
+    $name = $_POST['category_name'];
 
-        $name = $_POST['category_name'];
+    if ($name == "") {
+        $error = "Please select a category";
+    } else {
 
-        // CHECK DUPLICATE
-        $check = "SELECT * FROM categories 
-                  WHERE name='$name' AND company_id='$company_id'";
-        $checkResult = mysqli_query($conn, $check);
+        $check = mysqli_query($conn,
+            "SELECT * FROM event_categories 
+             WHERE name='$name' AND company_id='$company_id'"
+        );
 
-        if (mysqli_num_rows($checkResult) > 0) {
-            $error = "Category already exists.";
+        if (mysqli_num_rows($check) > 0) {
+            $error = "Category already exists";
         } else {
 
-            $query = "INSERT INTO categories (name, company_id) 
-                      VALUES ('$name', '$company_id')";
+            mysqli_query($conn,
+                "INSERT INTO event_categories (name, company_id)
+                 VALUES ('$name','$company_id')"
+            );
 
-            if (mysqli_query($conn, $query)) {
-                header("Location: index.php");
-                exit;
-            } else {
-                $error = "Database error: " . mysqli_error($conn);
-            }
+            header("Location: index.php");
+            exit;
         }
-
-    } else {
-        $error = "Please select a category.";
     }
 }
 ?>
 
 <div class="container">
 
-    <h2>Add Category</h2>
-
     <div class="form-container">
-        <div class="form-box">
 
-            <!-- ERROR MESSAGE -->
+        <div class="form-box modern-form">
+
+            <h2>Add Category</h2>
+            <p class="muted">Choose a category for your events</p>
+
             <?php if ($error != "") { ?>
-                <p style="color:red;"><?php echo $error; ?></p>
+                <div class="alert error"><?= $error ?></div>
             <?php } ?>
 
             <form method="POST">
@@ -67,18 +62,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <option value="">Select Category</option>
 
                     <?php foreach ($categories as $cat) { ?>
-                        <option value="<?php echo $cat; ?>">
-                            <?php echo $cat; ?>
-                        </option>
+                        <option value="<?= $cat ?>"><?= $cat ?></option>
                     <?php } ?>
 
                 </select>
 
-                <button class="btn btn-add">Add Category</button>
+                <button class="btn btn-primary">
+                    Add Category
+                </button>
 
             </form>
 
+            <a href="index.php" class="back-link">
+                ← Back to categories
+            </a>
+
         </div>
+
     </div>
 
 </div>

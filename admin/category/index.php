@@ -3,7 +3,6 @@ session_start();
 include('../../config/db.php');
 include('../header.php');
 
-// PROTECT PAGE
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../../auth/login.php");
     exit;
@@ -11,48 +10,42 @@ if (!isset($_SESSION['user_id'])) {
 
 $company_id = $_SESSION['company_id'];
 
-// GET DATA
-$query = "SELECT * FROM categories WHERE company_id = '$company_id'";
-$result = mysqli_query($conn, $query);
-
-// DEBUG if query fails
-if (!$result) {
-    die("SQL ERROR: " . mysqli_error($conn));
-}
+$result = mysqli_query($conn, "
+    SELECT * FROM event_categories 
+    WHERE company_id='$company_id'
+");
 ?>
 
 <div class="container">
 
-    <h2>Category List</h2>
+    <div class="page-header">
+        <h2 class="page-title">Manage Categories</h2>
 
-    <a href="add.php" class="btn btn-add">+ Add Category</a>
+        <a href="add.php" class="btn btn-primary">
+            + Add Category
+        </a>
+    </div>
 
-    <hr>
+    <?php if(mysqli_num_rows($result) == 0){ ?>
+        <div class="empty-state">
+            <h3>No categories yet</h3>
+            <p>Start by adding your first event category</p>
+        </div>
+    <?php } ?>
 
-    <?php if (mysqli_num_rows($result) > 0) { ?>
+    <?php while($row=mysqli_fetch_assoc($result)){ ?>
+        <div class="card">
 
-        <?php while($row = mysqli_fetch_assoc($result)) { ?>
-
-            <div class="category-item">
-
-                <strong><?php echo $row['name']; ?></strong>
-
-                <div style="margin-top:10px;">
-                    <a href="edit.php?id=<?php echo $row['id']; ?>" class="btn btn-edit">Edit</a>
-
-                    <a href="#"
-                       class="btn btn-delete"
-                       onclick="openModal('delete.php?id=<?php echo $row['id']; ?>')">
-                        Delete
-                    </a>
-                </div>
-
+            <div class="card-title">
+                <?= $row['name'] ?>
             </div>
 
-        <?php } ?>
+            <a href="delete.php?id=<?= $row['id'] ?>" 
+               class="btn btn-delete">
+               Delete
+            </a>
 
-    <?php } else { ?>
-        <p>No categories found.</p>
+        </div>
     <?php } ?>
 
 </div>

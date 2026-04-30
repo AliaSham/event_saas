@@ -35,20 +35,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
         }
 
-        // Redirect ikut role
+        // Redirect
         if ($error == "") {
             if ($user['role'] == 'admin') {
                 header("Location: ../admin/dashboard.php");
                 exit;
-
             } elseif ($user['role'] == 'customer') {
                 header("Location: ../customer/dashboard.php");
                 exit;
-
             } elseif ($user['role'] == 'vendor') {
                 header("Location: ../vendor/dashboard.php");
                 exit;
-
             } else {
                 $error = "Invalid role";
             }
@@ -71,32 +68,36 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 <body>
 
-<div class="login-wrapper">
+<div class="auth-wrapper">
 
     <div class="overlay"></div>
 
+    <!-- KEEP YOUR ANIMATION -->
     <h1 class="hello-text">hello</h1>
 
-    <div class="login-box">
-        <div class="login-box-inner">
+    <div class="auth-card">
 
-            <h2>Login</h2>
+        <h2 class="auth-title">Welcome Back</h2>
+        <p class="auth-sub">Login to your account</p>
 
-            <?php if ($error != "") { ?>
-                <p style="color:red;"><?php echo $error; ?></p>
-            <?php } ?>
+        <?php if ($error != "") { ?>
+            <div class="alert error"><?php echo $error; ?></div>
+        <?php } ?>
 
-            <form method="POST">
-                <input type="email" name="email" placeholder="Enter Email" required>
-                <input type="password" name="password" placeholder="Enter Password" required>
+        <form method="POST">
 
-                <button class="btn btn-primary">Login</button>
-            </form>
+            <input type="email" name="email" placeholder="Enter Email" required>
+            <input type="password" name="password" placeholder="Enter Password" required>
 
-            <br>
-            <a href="register.php">Don't have an account? Register</a>
+            <button class="btn btn-primary">Login</button>
 
-        </div>
+        </form>
+
+        <p class="auth-link">
+            Don't have an account?
+            <a href="register.php">Register</a>
+        </p>
+
     </div>
 
 </div>
