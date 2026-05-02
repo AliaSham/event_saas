@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+// PROTECT PAGE
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'vendor') {
     header("Location: ../auth/login.php");
     exit;

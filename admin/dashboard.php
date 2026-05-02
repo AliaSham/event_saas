@@ -2,7 +2,7 @@
 session_start();
 include('../config/db.php');
 
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'admin') {
     header("Location: ../auth/login.php");
     exit;
 }
@@ -125,11 +125,11 @@ body {
         <a href="package/index.php" class="btn">Open</a>
     </div>
 
-    <!-- BOOKINGS -->
+    <!-- BOOKINGS (FIXED) -->
     <div class="card">
         <h3>View Bookings</h3>
-        <p>Check all customer bookings.</p>
-        <a href="../customer/history.php" class="btn">View</a>
+        <p>Monitor all customer bookings.</p>
+        <a href="bookings/index.php" class="btn">View</a>
     </div>
 
 </div>
