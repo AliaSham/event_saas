@@ -33,13 +33,61 @@ $result = mysqli_query($conn, "
 ");
 ?>
 
+<style>
+.package-image {
+    width: 140px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #eee;
+}
+
+.card-details {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #444;
+    line-height: 1.6;
+}
+
+.card-details p {
+    margin: 4px 0;
+}
+
+.card-actions {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.card-actions .btn {
+    min-width: 70px;
+    height: 40px;
+    padding: 0 14px !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-success {
+    background: #28a745;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #218838;
+}
+</style>
+
 <div class="container">
 
     <div class="page-header">
         <div>
             <h2 class="page-title">Manage Packages</h2>
             <p class="muted">
-                Packages Used: <?= $countData['total'] ?> / <?= $limits['packages'] ?>
+                Package Limit: <?= $limits['packages_per_category'] ?> per category
             </p>
         </div>
 
@@ -55,26 +103,50 @@ $result = mysqli_query($conn, "
         </div>
     <?php } ?>
 
-    <?php while($row=mysqli_fetch_assoc($result)){ ?>
+    <?php while($row = mysqli_fetch_assoc($result)){ ?>
+
         <div class="card">
 
             <div class="card-content">
+
+                <?php if (!empty($row['image'])) { ?>
+                    <img src="../../uploads/packages/<?= $row['image'] ?>" 
+                         alt="Package Image" 
+                         class="package-image">
+                <?php } ?>
+
                 <div class="card-title">
                     <?= $row['package_name'] ?>
                 </div>
 
                 <div class="card-meta">
-                    RM <?= number_format($row['base_price'],2) ?> • 
+                    RM <?= number_format($row['base_price'], 2) ?> • 
                     <?= $row['category_name'] ?>
                 </div>
+
+                <div class="card-details">
+                    <p><strong>Pax:</strong> <?= $row['pax'] ?> pax</p>
+                    <p><strong>Description:</strong> <?= $row['description'] ?></p>
+                    <p><strong>Menu:</strong> <?= $row['menu'] ?></p>
+                </div>
+
             </div>
 
-            <a href="delete.php?id=<?= $row['id'] ?>" 
-               class="btn btn-delete">
-               Delete
-            </a>
+            <div class="card-actions">
+                <a href="edit.php?id=<?= $row['id'] ?>" 
+                   class="btn btn-success">
+                    Edit
+                </a>
+
+                <a href="delete.php?id=<?= $row['id'] ?>" 
+                   class="btn btn-delete"
+                   onclick="return confirm('Are you sure you want to delete this package?');">
+                    Delete
+                </a>
+            </div>
 
         </div>
+
     <?php } ?>
 
 </div>

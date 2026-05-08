@@ -1,6 +1,7 @@
-<?php
+<?php 
 session_start();
 include('../../config/db.php');
+include('../../config/plan.php');
 include('../header.php');
 
 if (!isset($_SESSION['user_id'])) {
@@ -14,13 +15,43 @@ $categories = ["Wedding", "Birthday", "Corporate", "Engagement", "Party"];
 
 $error = "";
 
+/* GET COMPANY PLAN */
+$res = mysqli_query($conn, "SELECT plan FROM companies WHERE id='$company_id'");
+$data = mysqli_fetch_assoc($res);
+$limits = getPlanLimits($data['plan']);
+
+/* FUNCTION: GET CATEGORY COUNT */
+function getCategoryCount($conn, $company_id) {
+    $q = mysqli_query($conn, "
+        SELECT COUNT(*) as total 
+        FROM event_categories 
+        WHERE company_id='$company_id'
+    ");
+
+    $row = mysqli_fetch_assoc($q);
+    return $row['total'];
+}
+
+/* GET CURRENT CATEGORY COUNT */
+$currentCount = getCategoryCount($conn, $company_id);
+
+/* CHECK IF CATEGORY LIMIT REACHED */
+$limitReached = ($currentCount >= $limits['categories']);
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     $name = $_POST['category_name'];
 
-    if ($name == "") {
+    /* CHECK AGAIN WHEN SUBMIT */
+    $currentCount = getCategoryCount($conn, $company_id);
+
+    if ($currentCount >= $limits['categories']) {
+        $error = "You have reached your category limit for this plan.";
+    }
+    elseif ($name == "") {
         $error = "Please select a category";
-    } else {
+    } 
+    else {
 
         $check = mysqli_query($conn,
             "SELECT * FROM event_categories 
@@ -50,28 +81,44 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <div class="form-box modern-form">
 
             <h2>Add Category</h2>
-            <p class="muted">Choose a category for your events</p>
+            <p class="muted">
+                Category Used: <?= $currentCount ?> / <?= $limits['categories'] ?>
+            </p>
 
             <?php if ($error != "") { ?>
                 <div class="alert error"><?= $error ?></div>
             <?php } ?>
 
-            <form method="POST">
+            <?php if ($limitReached) { ?>
 
-                <select name="category_name" required>
-                    <option value="">Select Category</option>
+                <div class="alert error">
+                    You reached your category limit. Upgrade your plan to add more categories.
+                </div>
 
-                    <?php foreach ($categories as $cat) { ?>
-                        <option value="<?= $cat ?>"><?= $cat ?></option>
-                    <?php } ?>
+                <a href="../subscription/upgrade.php" class="btn btn-primary">
+                    Upgrade Plan
+                </a>
 
-                </select>
+            <?php } else { ?>
 
-                <button class="btn btn-primary">
-                    Add Category
-                </button>
+                <form method="POST">
 
-            </form>
+                    <select name="category_name" required>
+                        <option value="">Select Category</option>
+
+                        <?php foreach ($categories as $cat) { ?>
+                            <option value="<?= $cat ?>"><?= $cat ?></option>
+                        <?php } ?>
+
+                    </select>
+
+                    <button class="btn btn-primary">
+                        Add Category
+                    </button>
+
+                </form>
+
+            <?php } ?>
 
             <a href="index.php" class="back-link">
                 ← Back to categories

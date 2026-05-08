@@ -98,7 +98,7 @@ a {
 
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
 
     box-shadow: 0 6px 18px rgba(0,0,0,0.06);
     transition: 0.2s;
@@ -111,6 +111,17 @@ a {
 
 .card-title {
     font-weight: 500;
+}
+
+.card-details {
+    margin-top: 12px;
+    color: #444;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.card-details p {
+    margin: 5px 0;
 }
 
 /* ===== DASHBOARD ===== */
@@ -143,18 +154,27 @@ a {
 }
 
 .form-box input,
-.form-box select {
+.form-box select,
+.form-box textarea {
     width: 100%;
     padding: 12px;
     margin-bottom: 15px;
     border-radius: 8px;
     border: 1px solid #ddd;
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+}
+
+.form-box textarea {
+    min-height: 100px;
+    resize: vertical;
 }
 
 .form-box input:focus,
-.form-box select:focus {
+.form-box select:focus,
+.form-box textarea:focus {
     border-color: #1677ff;
-    outline: none;
     box-shadow: 0 0 0 2px rgba(22,119,255,0.1);
 }
 
@@ -241,6 +261,7 @@ a {
     );
 
     background-size: 200% auto;
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 
@@ -410,4 +431,49 @@ a {
 
 .btn-success:hover {
     background: #218838;
+}
+
+/* ===== PACKAGE ACTION BUTTON FIX ===== */
+.card-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+/* Make Edit and Delete button same size */
+.card-actions .btn,
+.card-actions .btn-success,
+.card-actions .btn-delete {
+    min-width: 70px;
+    height: 40px;
+    padding: 0 14px !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    font-weight: 500;
+    line-height: 1 !important;
+
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Edit button */
+.card-actions .btn-success {
+    background: #28a745 !important;
+    color: #fff !important;
+}
+
+.card-actions .btn-success:hover {
+    background: #218838 !important;
+}
+
+/* Delete button */
+.card-actions .btn-delete {
+    background: #ff4d4f !important;
+    color: #fff !important;
+}
+
+.card-actions .btn-delete:hover {
+    background: #d9363e !important;
 }
