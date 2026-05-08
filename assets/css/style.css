@@ -541,7 +541,7 @@ a {
     margin-bottom: 14px;
 }
 
-/* ===== ADMIN CALENDAR ===== */
+/* ===== ADMIN/VENDOR CALENDAR ===== */
 .calendar-wrapper {
     background: #fff;
     padding: 20px;
@@ -635,4 +635,117 @@ a {
     border-radius: 6px;
     padding: 2px 4px;
     font-size: 11px;
+}
+
+.form-box label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: #555;
+    margin-bottom: 6px;
+}
+
+.form-box input,
+.form-box select,
+.form-box textarea {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.form-box textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.current-image {
+    width: 160px;
+    height: 110px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+}
+
+/* ===== VENDOR DASHBOARD CARD FIX ===== */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 24px;
+}
+
+.dashboard-card {
+    background: #fff;
+    padding: 28px;
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.dashboard-card h3 {
+    margin-bottom: 10px;
+}
+
+.dashboard-card p {
+    color: #444;
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+
+.dashboard-card .btn {
+    width: fit-content;
+    margin-top: auto;
+}
+
+/* ===== ADMIN MANAGE VENDORS ===== */
+.vendor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+}
+
+.vendor-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+    overflow: hidden;
+}
+
+.vendor-card-img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+}
+
+.vendor-card-body {
+    padding: 22px;
+}
+
+.vendor-card-body h3 {
+    margin-bottom: 8px;
+}
+
+.vendor-type {
+    color: #666;
+    margin-bottom: 14px;
+}
+
+.vendor-card-body p {
+    font-size: 14px;
+    color: #444;
+    line-height: 1.5;
+    margin-bottom: 8px;
+}
+
+.vendor-card-body .btn {
+    margin-top: 12px;
 }

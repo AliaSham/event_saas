@@ -16,38 +16,49 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         $user = mysqli_fetch_assoc($result);
 
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['role'] = $user['role'];
-        $_SESSION['company_id'] = $user['company_id'];
+        /* CHECK VENDOR APPROVAL FIRST */
+        if ($user['role'] == 'vendor' && $user['approval_status'] != 'active') {
+            $error = "Your vendor account is still pending approval.";
+        } 
+        else {
 
-        // SaaS check
-        if ($user['company_id'] != NULL) {
-            $company_id = $user['company_id'];
+            /* SaaS check only for company/admin users */
+            if ($user['company_id'] != NULL) {
+                $company_id = $user['company_id'];
 
-            $company_query = mysqli_query($conn, 
-                "SELECT subscription_status FROM companies WHERE id='$company_id'"
-            );
+                $company_query = mysqli_query($conn, 
+                    "SELECT subscription_status FROM companies WHERE id='$company_id'"
+                );
 
-            $company = mysqli_fetch_assoc($company_query);
+                $company = mysqli_fetch_assoc($company_query);
 
-            if (!$company || $company['subscription_status'] != 'Active') {
-                $error = "Subscription inactive";
+                if (!$company || $company['subscription_status'] != 'Active') {
+                    $error = "Subscription inactive";
+                }
             }
-        }
 
-        // Redirect
-        if ($error == "") {
-            if ($user['role'] == 'admin') {
-                header("Location: ../admin/dashboard.php");
-                exit;
-            } elseif ($user['role'] == 'customer') {
-                header("Location: ../customer/dashboard.php");
-                exit;
-            } elseif ($user['role'] == 'vendor') {
-                header("Location: ../vendor/dashboard.php");
-                exit;
-            } else {
-                $error = "Invalid role";
+            /* SET SESSION ONLY IF NO ERROR */
+            if ($error == "") {
+
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['role'] = $user['role'];
+                $_SESSION['company_id'] = $user['company_id'];
+
+                if ($user['role'] == 'admin') {
+                    header("Location: ../admin/dashboard.php");
+                    exit;
+                } 
+                elseif ($user['role'] == 'customer') {
+                    header("Location: ../customer/dashboard.php");
+                    exit;
+                } 
+                elseif ($user['role'] == 'vendor') {
+                    header("Location: ../vendor/dashboard.php");
+                    exit;
+                } 
+                else {
+                    $error = "Invalid role";
+                }
             }
         }
 

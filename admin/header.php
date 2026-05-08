@@ -11,10 +11,12 @@ if (!isset($_SESSION['user_id'])) {
 
     <!-- LEFT SIDE -->
     <div class="nav-left">
-        <<a href="/event_saas/admin/dashboard.php">Dashboard</a>
+        <a href="/event_saas/admin/dashboard.php">Dashboard</a>
+        <a href="/event_saas/admin/company_profile.php">Company Profile</a>
         <a href="/event_saas/admin/category/index.php">Category</a>
         <a href="/event_saas/admin/package/index.php">Package</a>
         <a href="/event_saas/admin/calendar/index.php">Calendar</a>
+        <a href="/event_saas/admin/vendors/index.php">Vendors</a>
     </div>
 
     <!-- RIGHT SIDE -->

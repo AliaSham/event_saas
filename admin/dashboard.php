@@ -41,6 +41,15 @@ $company_id = $_SESSION['company_id'];
 
         <div class="admin-card">
             <div>
+                <div class="card-icon">🏢</div>
+                <h3>Company Profile</h3>
+                <p>Update your company details shown to customers.</p>
+            </div>
+            <a href="company_profile.php" class="btn btn-primary">Open</a>
+        </div>
+
+        <div class="admin-card">
+            <div>
                 <div class="card-icon">📂</div>
                 <h3>Manage Categories</h3>
                 <p>Create and organize event types.</p>
@@ -50,7 +59,7 @@ $company_id = $_SESSION['company_id'];
 
         <div class="admin-card">
             <div>
-                <div class="card-icon">🎁</div>
+                <div class="card-icon">📖</div>
                 <h3>Manage Packages</h3>
                 <p>Create packages with SaaS limits.</p>
             </div>
@@ -75,6 +84,14 @@ $company_id = $_SESSION['company_id'];
             <a href="calendar/index.php" class="btn btn-primary">Open</a>
         </div>
 
+        <div class="admin-card">
+        <div>
+            <div class="card-icon">🤝</div>
+            <h3>Manage Vendors</h3>
+            <p>Select vendors based on your subscription plan.</p>
+        </div>
+        <a href="vendors/index.php" class="btn btn-primary">Open</a>
+    </div>
     </div>
 
 </div>
