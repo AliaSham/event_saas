@@ -477,3 +477,162 @@ a {
 .card-actions .btn-delete:hover {
     background: #d9363e !important;
 }
+
+.alert.success {
+    background: #e6ffed;
+    color: #1f7a3f;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+}
+
+/* ===== ADMIN DASHBOARD ===== */
+.admin-dashboard {
+    padding: 45px 60px;
+}
+
+.admin-dashboard h2 {
+    font-size: 30px;
+    margin-bottom: 8px;
+}
+
+.admin-dashboard .company-id {
+    color: #6b7280;
+    margin-bottom: 30px;
+}
+
+.admin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 24px;
+}
+
+.admin-card {
+    background: white;
+    padding: 28px;
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+    transition: 0.25s ease;
+    min-height: 170px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.admin-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 35px rgba(0,0,0,0.10);
+}
+
+.admin-card h3 {
+    font-size: 21px;
+    margin-bottom: 10px;
+}
+
+.admin-card p {
+    color: #6b7280;
+    font-size: 15px;
+    line-height: 1.5;
+    margin-bottom: 18px;
+}
+
+.card-icon {
+    font-size: 32px;
+    margin-bottom: 14px;
+}
+
+/* ===== ADMIN CALENDAR ===== */
+.calendar-wrapper {
+    background: #fff;
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+    max-width: 1150px;
+    margin: 0 auto;
+}
+
+#calendar {
+    width: 100%;
+    min-height: 0;
+}
+
+.calendar-info {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    color: #666;
+    font-size: 14px;
+    flex-wrap: wrap;
+}
+
+.bottom-info {
+    margin-top: 18px;
+    padding-top: 12px;
+    border-top: 1px solid #eee;
+}
+
+.legend-box {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+}
+
+.closed-box {
+    background: #ff4d4f;
+}
+
+.pending-box {
+    background: #facc15;
+}
+
+.confirmed-box {
+    background: #22c55e;
+}
+
+.fc .fc-toolbar {
+    margin-bottom: 18px !important;
+}
+
+.fc .fc-toolbar-title {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.fc .fc-button {
+    background: #1677ff !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 6px 10px !important;
+    font-size: 13px !important;
+}
+
+.fc .fc-button:hover {
+    background: #125fd1 !important;
+}
+
+.fc-col-header-cell-cushion {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    text-decoration: none !important;
+}
+
+.fc-daygrid-day-number {
+    font-size: 14px;
+    color: #333;
+    text-decoration: none !important;
+}
+
+.fc-daygrid-day {
+    cursor: pointer;
+}
+
+.fc-daygrid-day-frame {
+    min-height: 85px !important;
+}
+
+.fc-event {
+    border-radius: 6px;
+    padding: 2px 4px;
+    font-size: 11px;
+}
