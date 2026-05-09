@@ -62,22 +62,78 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
     exit;
 }
 
-/* FETCH VENDOR CLOSED DATES */
+/* FETCH CALENDAR EVENTS */
 $calendarEvents = [];
 
-$result = mysqli_query($conn, "
+/* 1. VENDOR UNAVAILABLE DATES - RED */
+$unavailableQ = mysqli_query($conn, "
     SELECT * FROM vendor_calendar
     WHERE vendor_user_id='$vendor_id'
     ORDER BY unavailable_date ASC
 ");
 
-while ($row = mysqli_fetch_assoc($result)) {
+while ($row = mysqli_fetch_assoc($unavailableQ)) {
     $calendarEvents[] = [
         'title' => 'Unavailable',
         'start' => $row['unavailable_date'],
         'backgroundColor' => '#ff4d4f',
         'borderColor' => '#ff4d4f',
-        'textColor' => '#ffffff'
+        'textColor' => '#ffffff',
+        'extendedProps' => [
+            'type' => 'unavailable',
+            'reason' => $row['reason']
+        ]
+    ];
+}
+
+/* 2. PENDING / CONFIRMED BOOKINGS - YELLOW / GREEN */
+$bookingQ = mysqli_query($conn, "
+    SELECT 
+        b.id AS booking_id,
+        b.event_date,
+        b.status,
+        b.total_price,
+        c.company_name,
+        p.package_name,
+        u.name AS customer_name
+    FROM booking_vendors bv
+    JOIN bookings b ON bv.booking_id = b.id
+    JOIN companies c ON b.company_id = c.id
+    JOIN packages p ON b.package_id = p.id
+    JOIN users u ON b.user_id = u.id
+    WHERE bv.vendor_id = '$vendor_id'
+    AND b.status IN ('Pending', 'Confirmed')
+    ORDER BY b.event_date ASC
+");
+
+while ($row = mysqli_fetch_assoc($bookingQ)) {
+
+    if ($row['status'] == 'Pending') {
+        $color = '#facc15';
+        $textColor = '#000000';
+        $title = 'Pending Booking';
+        $type = 'pending';
+    } else {
+        $color = '#22c55e';
+        $textColor = '#ffffff';
+        $title = 'Confirmed Booking';
+        $type = 'confirmed';
+    }
+
+    $calendarEvents[] = [
+        'title' => $title,
+        'start' => $row['event_date'],
+        'backgroundColor' => $color,
+        'borderColor' => $color,
+        'textColor' => $textColor,
+        'extendedProps' => [
+            'type' => $type,
+            'booking_id' => $row['booking_id'],
+            'company_name' => $row['company_name'],
+            'package_name' => $row['package_name'],
+            'customer_name' => $row['customer_name'],
+            'total_price' => $row['total_price']
+        ]
     ];
 }
 ?>
@@ -96,24 +152,14 @@ while ($row = mysqli_fetch_assoc($result)) {
 
 <body>
 
-<div class="navbar">
-    <div class="nav-left">
-        <a href="../dashboard.php">Dashboard</a>
-        <a href="../profile.php">Profile</a>
-        <a href="index.php">Calendar</a>
-    </div>
-
-    <div class="nav-right">
-        <a href="../../auth/logout.php">Logout</a>
-    </div>
-</div>
+<?php include('../header.php'); ?>
 
 <div class="container">
 
     <div class="page-header">
         <div>
             <h2 class="page-title">Vendor Calendar</h2>
-            <p class="muted">Close dates when you are not available</p>
+            <p class="muted">Manage unavailable dates and view booking status</p>
         </div>
     </div>
 
@@ -123,7 +169,13 @@ while ($row = mysqli_fetch_assoc($result)) {
 
         <div class="calendar-info bottom-info">
             <span class="legend-box closed-box"></span>
-            <span>Unavailable Date</span>
+            <span>Unavailable</span>
+
+            <span class="legend-box pending-box"></span>
+            <span>Pending Booking</span>
+
+            <span class="legend-box confirmed-box"></span>
+            <span>Confirmed Booking</span>
         </div>
 
     </div>
@@ -148,12 +200,45 @@ document.addEventListener('DOMContentLoaded', function() {
 
         events: calendarEvents,
 
+        eventClick: function(info) {
+            const eventType = info.event.extendedProps.type;
+
+            if (eventType === "pending" || eventType === "confirmed") {
+                let details = 
+                    "Booking ID: #" + info.event.extendedProps.booking_id + "\n" +
+                    "Status: " + info.event.title + "\n" +
+                    "Company: " + info.event.extendedProps.company_name + "\n" +
+                    "Customer: " + info.event.extendedProps.customer_name + "\n" +
+                    "Package: " + info.event.extendedProps.package_name + "\n" +
+                    "Total Price: RM " + parseFloat(info.event.extendedProps.total_price).toFixed(2);
+
+                alert(details);
+            }
+
+            if (eventType === "unavailable") {
+                alert("Unavailable date\nReason: " + info.event.extendedProps.reason);
+            }
+        },
+
         dateClick: function(info) {
             const clickedDate = info.dateStr;
 
-            const isUnavailable = calendarEvents.some(function(event) {
-                return event.start === clickedDate && event.title === "Unavailable";
+            const eventsOnDate = calendarEvents.filter(function(event) {
+                return event.start === clickedDate;
             });
+
+            const hasBooking = eventsOnDate.some(function(event) {
+                return event.extendedProps.type === "pending" || event.extendedProps.type === "confirmed";
+            });
+
+            const isUnavailable = eventsOnDate.some(function(event) {
+                return event.extendedProps.type === "unavailable";
+            });
+
+            if (hasBooking) {
+                alert("This date has a booking. You cannot manually open or close this date.");
+                return;
+            }
 
             if (isUnavailable) {
                 const confirmOpen = confirm("This date is currently unavailable. Do you want to make it available again?");

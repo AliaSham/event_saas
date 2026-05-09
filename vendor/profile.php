@@ -151,16 +151,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 <body>
 
-<div class="navbar">
-    <div class="nav-left">
-        <a href="dashboard.php">Dashboard</a>
-        <a href="profile.php">Profile</a>
-    </div>
-
-    <div class="nav-right">
-        <a href="../auth/logout.php">Logout</a>
-    </div>
-</div>
+<?php include('header.php'); ?>
 
 <div class="container">
 

@@ -69,10 +69,10 @@ $company_id = $_SESSION['company_id'];
         <div class="admin-card">
             <div>
                 <div class="card-icon">📋</div>
-                <h3>View Bookings</h3>
-                <p>Monitor all customer bookings.</p>
+                <h3>Manage Bookings</h3>
+                <p>Review customer bookings and approve or reject requests.</p>
             </div>
-            <a href="bookings/index.php" class="btn btn-primary">View</a>
+            <a href="bookings/index.php" class="btn btn-primary">Open</a>
         </div>
 
         <div class="admin-card">

@@ -42,16 +42,7 @@ $profile = mysqli_fetch_assoc($profileQ);
 
 <body>
 
-<div class="navbar">
-    <div class="nav-left">
-        <a href="dashboard.php">Dashboard</a>
-        <a href="profile.php">Profile</a>
-    </div>
-
-    <div class="nav-right">
-        <a href="../auth/logout.php">Logout</a>
-    </div>
-</div>
+<?php include('header.php'); ?>
 
 <div class="container">
 
@@ -86,11 +77,14 @@ $profile = mysqli_fetch_assoc($profileQ);
             </a>
         </div>
 
-        <div class="dashboard-card">
-            <h3>Assigned Bookings</h3>
-            <p>View bookings related to your vendor service.</p>
-            <a href="#" class="btn btn-primary">
-                Coming Soon
+       <div class="dashboard-card">
+            <div>
+                <h3>Assigned Bookings</h3>
+                <p>View bookings where customers selected your service.</p>
+            </div>
+
+            <a href="jobs/index.php" class="btn btn-primary">
+                View Jobs
             </a>
         </div>
 
