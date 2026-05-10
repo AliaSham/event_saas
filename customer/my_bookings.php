@@ -37,18 +37,7 @@ $bookings = mysqli_query($conn, "
 
 <body>
 
-<div class="customer-navbar">
-    <div class="brand">
-        Event Booking
-    </div>
-
-    <div>
-        <a href="dashboard.php">Browse</a>
-        <a href="my_bookings.php">My Bookings</a>
-        <a href="account.php">My Account</a>
-        <a href="../auth/logout.php" class="logout">Logout</a>
-    </div>
-</div>
+<?php include('header.php'); ?>
 
 <div class="container">
 

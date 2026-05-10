@@ -31,36 +31,6 @@ $companies = mysqli_query($conn, "
             color: #222;
         }
 
-        .customer-navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 40px;
-            background: #fff;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-        }
-
-        .customer-navbar .brand {
-            font-size: 20px;
-            font-weight: 600;
-            color: #1677ff;
-        }
-
-        .customer-navbar a {
-            text-decoration: none;
-            color: #333;
-            margin-left: 22px;
-            font-weight: 500;
-        }
-
-        .customer-navbar a:hover {
-            color: #1677ff;
-        }
-
-        .logout {
-            color: #ff4d4f !important;
-        }
-
         .customer-container {
             padding: 40px 60px;
         }
@@ -201,18 +171,7 @@ $companies = mysqli_query($conn, "
 
 <body>
 
-<div class="customer-navbar">
-    <div class="brand">
-        Event Booking
-    </div>
-
-    <div>
-        <a href="dashboard.php">Browse</a>
-        <a href="my_bookings.php">My Bookings</a>
-        <a href="account.php">My Account</a>
-        <a href="../auth/logout.php" class="logout">Logout</a>
-    </div>
-</div>
+<?php include('header.php'); ?>
 
 <div class="customer-container">
 

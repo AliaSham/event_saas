@@ -59,18 +59,37 @@ $category = mysqli_fetch_assoc($catQ);
 
 /* CHECK COMPANY AVAILABLE */
 function isCompanyAvailable($conn, $company_id, $event_date) {
-    $check = mysqli_query($conn, "
+
+    /* 1. Check date closed by admin */
+    $calendarCheck = mysqli_query($conn, "
         SELECT * FROM company_calendar
         WHERE company_id='$company_id'
         AND event_date='$event_date'
     ");
 
-    return mysqli_num_rows($check) == 0;
+    if (mysqli_num_rows($calendarCheck) > 0) {
+        return false;
+    }
+
+    /* 2. Check existing pending / confirmed booking */
+    $bookingCheck = mysqli_query($conn, "
+        SELECT * FROM bookings
+        WHERE company_id='$company_id'
+        AND event_date='$event_date'
+        AND status IN ('Pending', 'Confirmed')
+    ");
+
+    if (mysqli_num_rows($bookingCheck) > 0) {
+        return false;
+    }
+
+    return true;
 }
 
 /* CHECK VENDOR AVAILABLE */
 function isVendorAvailable($conn, $vendor_id, $event_date) {
 
+    /* Vendor close date sendiri */
     $calendarCheck = mysqli_query($conn, "
         SELECT * FROM vendor_calendar
         WHERE vendor_user_id='$vendor_id'
@@ -81,6 +100,7 @@ function isVendorAvailable($conn, $vendor_id, $event_date) {
         return false;
     }
 
+    /* Vendor already booked / pending */
     $bookingCheck = mysqli_query($conn, "
         SELECT bv.*
         FROM booking_vendors bv
@@ -99,6 +119,9 @@ function isVendorAvailable($conn, $vendor_id, $event_date) {
 
 /* LOAD PACKAGES AND AVAILABLE VENDORS */
 function loadBookingOptions($conn, $company_id, $category_id, $event_date, &$packages, &$vendors) {
+
+    $packages = [];
+    $vendors = [];
 
     $packageQ = mysqli_query($conn, "
         SELECT *
@@ -260,6 +283,44 @@ if (isset($_POST['submit_booking'])) {
         loadBookingOptions($conn, $company_id, $category_id, $event_date, $packages, $vendors);
     }
 }
+
+/* GET BLOCKED DATES FOR CUSTOMER CALENDAR */
+$blockedDates = [];
+
+/* 1. Admin closed dates */
+$closedQ = mysqli_query($conn, "
+    SELECT event_date
+    FROM company_calendar
+    WHERE company_id='$company_id'
+");
+
+while ($row = mysqli_fetch_assoc($closedQ)) {
+    $blockedDates[] = [
+        'title' => 'Unavailable',
+        'start' => $row['event_date'],
+        'backgroundColor' => '#ff4d4f',
+        'borderColor' => '#ff4d4f',
+        'textColor' => '#ffffff'
+    ];
+}
+
+/* 2. Pending / Confirmed booking dates */
+$bookingDateQ = mysqli_query($conn, "
+    SELECT event_date
+    FROM bookings
+    WHERE company_id='$company_id'
+    AND status IN ('Pending', 'Confirmed')
+");
+
+while ($row = mysqli_fetch_assoc($bookingDateQ)) {
+    $blockedDates[] = [
+        'title' => 'Unavailable',
+        'start' => $row['event_date'],
+        'backgroundColor' => '#ff4d4f',
+        'borderColor' => '#ff4d4f',
+        'textColor' => '#ffffff'
+    ];
+}
 ?>
 
 <!DOCTYPE html>
@@ -269,22 +330,14 @@ if (isset($_POST['submit_booking'])) {
 
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/event_saas/assets/css/style.css">
+
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
 </head>
 
 <body>
 
-<div class="customer-navbar">
-    <div class="brand">
-        Event Booking
-    </div>
-
-    <div>
-        <a href="dashboard.php">Browse</a>
-        <a href="my_bookings.php">My Bookings</a>
-        <a href="account.php">My Account</a>
-        <a href="../auth/logout.php" class="logout">Logout</a>
-    </div>
-</div>
+<?php include('header.php'); ?>
 
 <div class="container">
 
@@ -309,14 +362,33 @@ if (isset($_POST['submit_booking'])) {
         <div class="booking-step-card">
 
             <h3>Step 1: Choose Event Date</h3>
-            <p class="muted">Check whether this company is available on your selected date.</p>
+            <p class="muted">
+                Select an available date from the calendar. Red dates are unavailable.
+            </p>
 
-            <form method="POST">
+            <div class="customer-calendar-wrapper">
+                <div id="customerCalendar"></div>
 
-                <input type="date"
+                <div class="calendar-info bottom-info">
+                    <span class="legend-box closed-box"></span>
+                    <span>Unavailable</span>
+                </div>
+            </div>
+
+            <form method="POST" id="dateForm">
+
+                <input type="hidden"
                        name="event_date"
+                       id="selectedDate"
                        value="<?= $event_date ?>"
                        required>
+
+                <p class="selected-date-text">
+                    Selected Date:
+                    <strong id="selectedDateText">
+                        <?= $event_date != "" ? $event_date : "No date selected" ?>
+                    </strong>
+                </p>
 
                 <button class="btn btn-primary" name="check_availability">
                     Check Availability
@@ -329,10 +401,12 @@ if (isset($_POST['submit_booking'])) {
         <?php if ($available) { ?>
 
             <?php if (count($packages) == 0) { ?>
+
                 <div class="empty-state">
                     <h3>No packages available</h3>
                     <p>This company has no package under this event category.</p>
                 </div>
+
             <?php } else { ?>
 
                 <form method="POST">
@@ -397,10 +471,12 @@ if (isset($_POST['submit_booking'])) {
                         </p>
 
                         <?php if (count($vendors) == 0) { ?>
+
                             <div class="empty-state">
                                 <h3>No add-on available</h3>
                                 <p>You can continue booking without vendor add-on.</p>
                             </div>
+
                         <?php } else { ?>
 
                             <div class="vendor-grid">
@@ -479,6 +555,50 @@ if (isset($_POST['submit_booking'])) {
     </div>
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    const calendarEl = document.getElementById('customerCalendar');
+
+    if (calendarEl) {
+
+        let blockedDates = <?= json_encode($blockedDates) ?>;
+
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            contentHeight: 500,
+
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth'
+            },
+
+            events: blockedDates,
+
+            dateClick: function(info) {
+                const clickedDate = info.dateStr;
+
+                const isBlocked = blockedDates.some(function(event) {
+                    return event.start === clickedDate;
+                });
+
+                if (isBlocked) {
+                    alert("This date is unavailable. Please choose another date.");
+                    return;
+                }
+
+                document.getElementById("selectedDate").value = clickedDate;
+                document.getElementById("selectedDateText").innerText = clickedDate;
+            }
+        });
+
+        calendar.render();
+    }
+
+});
+</script>
 
 <script>
 const maxAddons = <?= $maxAddons ?>;

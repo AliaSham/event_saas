@@ -1118,3 +1118,21 @@ a {
 .vendor-navbar .logout {
     color: #ff4d4f !important;
 }
+
+/* ===== CUSTOMER BOOKING CALENDAR ===== */
+.customer-calendar-wrapper {
+    background: #fff;
+    padding: 18px;
+    border-radius: 16px;
+    border: 1px solid #eee;
+    margin: 18px 0;
+}
+
+#customerCalendar {
+    width: 100%;
+}
+
+.selected-date-text {
+    margin: 15px 0;
+    color: #444;
+}
