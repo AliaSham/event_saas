@@ -1,0 +1,109 @@
+<?php
+include "../config/db.php";
+
+$error = "";
+$success = "";
+
+if (isset($_POST['register'])) {
+
+    $name = $_POST['name'];
+    $email = $_POST['email'];
+    $password = $_POST['password'];
+
+    $role = "vendor";
+    $approval_status = "pending";
+
+    $check = mysqli_query($conn, "
+        SELECT * FROM users 
+        WHERE email='$email'
+    ");
+
+    if (mysqli_num_rows($check) > 0) {
+        $error = "Email already exists!";
+    } else {
+
+        $query = "
+            INSERT INTO users 
+            (name, email, password, role, company_id, approval_status)
+            VALUES 
+            ('$name', '$email', '$password', '$role', NULL, '$approval_status')
+        ";
+
+        if (mysqli_query($conn, $query)) {
+            $success = "Vendor account registered successfully. Please wait for approval.";
+        } else {
+            $error = "Error: " . mysqli_error($conn);
+        }
+    }
+}
+?>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Vendor Register</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/event_saas/assets/css/style.css">
+</head>
+
+<body>
+
+<div class="auth-wrapper">
+
+    <div class="overlay"></div>
+
+    <h1 class="hello-text">hello</h1>
+
+    <div class="auth-card">
+
+        <h2 class="auth-title">Vendor Register</h2>
+        <p class="auth-sub">Create your vendor account</p>
+
+        <?php if ($error != "") { ?>
+            <div class="alert error"><?php echo $error; ?></div>
+        <?php } ?>
+
+        <?php if ($success != "") { ?>
+            <div class="alert success"><?php echo $success; ?></div>
+        <?php } ?>
+
+        <form method="POST">
+
+            <input type="text" 
+                   name="name" 
+                   placeholder="Enter Vendor Name" 
+                   required>
+
+            <input type="email" 
+                   name="email" 
+                   placeholder="Enter Email" 
+                   required>
+
+            <input type="password" 
+                   name="password" 
+                   placeholder="Enter Password" 
+                   required>
+
+            <button class="btn btn-primary" name="register">
+                Register
+            </button>
+
+        </form>
+
+        <p class="auth-link">
+            Already have an account?
+            <a href="login.php">Login</a>
+        </p>
+
+        <p class="auth-link">
+            Register as customer?
+            <a href="register.php">Customer Register</a>
+        </p>
+
+    </div>
+
+</div>
+
+</body>
+</html>
