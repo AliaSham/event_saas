@@ -6,8 +6,8 @@ $error = "";
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-    $email = $_POST['email'];
-    $password = $_POST['password'];
+    $email = mysqli_real_escape_string($conn, $_POST['email']);
+    $password = mysqli_real_escape_string($conn, $_POST['password']);
 
     $query = "SELECT * FROM users WHERE email='$email' AND password='$password'";
     $result = mysqli_query($conn, $query);
@@ -16,13 +16,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         $user = mysqli_fetch_assoc($result);
 
-        /* CHECK VENDOR APPROVAL FIRST */
+        /* 1. SEMAK KELULUSAN VENDOR TERLEBIH DAHULU */
         if ($user['role'] == 'vendor' && $user['approval_status'] != 'active') {
             $error = "Your vendor account is still pending approval.";
         } 
+        /* 2. SEMAK STATUS LANGGANAN AKAUN ADMIN */
+        elseif ($user['role'] == 'admin' && $user['subscription_status'] != 'Active') {
+            $error = "Your admin account subscription is inactive or suspended.";
+        }
         else {
 
-            /* SaaS check only for company/admin users */
+            /* 3. SEMAK STATUS LANGGANAN DI PERINGKAT SYARIKAT (SaaS CHECK) */
             if ($user['company_id'] != NULL) {
                 $company_id = $user['company_id'];
 
@@ -33,11 +37,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $company = mysqli_fetch_assoc($company_query);
 
                 if (!$company || $company['subscription_status'] != 'Active') {
-                    $error = "Subscription inactive";
+                    $error = "Subscription inactive for this company.";
                 }
             }
 
-            /* SET SESSION ONLY IF NO ERROR */
+            /* TETAPKAN SESSION HANYA JIKA TIADA RALAT / SEKATAN */
             if ($error == "") {
 
                 $_SESSION['user_id'] = $user['id'];
@@ -83,7 +87,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     <div class="overlay"></div>
 
-    <!-- KEEP YOUR ANIMATION -->
     <h1 class="hello-text">hello</h1>
 
     <div class="auth-card">

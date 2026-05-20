@@ -2,12 +2,34 @@
 session_start();
 include('../config/db.php');
 
+// 1. Semakan Asas: Pastikan pengguna sudah log masuk dan mempunyai role admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'admin') {
     header("Location: ../auth/login.php");
     exit;
 }
 
+$user_id = $_SESSION['user_id'];
 $company_id = $_SESSION['company_id'];
+
+/* ========================================================
+    LIVE CHECK: SEMAK STATUS LANGGANAN ADMIN & SYARIKAT
+======================================================== */
+$statusQuery = mysqli_query($conn, "
+    SELECT subscription_status 
+    FROM users 
+    WHERE id = '$user_id'
+");
+$userData = mysqli_fetch_assoc($statusQuery);
+
+// SEKATAN: Jika status dalam pangkalan data TIDAK AKTIF atau selain 'Active', tendang keluar!
+if (!$userData || $userData['subscription_status'] !== 'Active') {
+    session_destroy(); // Hancurkan semua session aktif pelayar
+    echo "<script>
+        alert('Sesi anda ditamatkan! Akaun langganan syarikat anda telah disekat atau tidak aktif.');
+        window.location.href = '../auth/login.php';
+    </script>";
+    exit;
+}
 
 /* =========================
    GET COMPANY PLAN
