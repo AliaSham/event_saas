@@ -14,11 +14,10 @@ if (!isset($_GET['company_id'])) {
 
 $company_id = $_GET['company_id'];
 
-/* GET COMPANY */
+/* GET COMPANY WITH LIVE EXPIRY CHECK */
 $companyQ = mysqli_query($conn, "
     SELECT * FROM companies
     WHERE id='$company_id'
-    AND subscription_status='Active'
 ");
 
 if (mysqli_num_rows($companyQ) == 0) {
@@ -27,6 +26,26 @@ if (mysqli_num_rows($companyQ) == 0) {
 }
 
 $company = mysqli_fetch_assoc($companyQ);
+
+// ========================================================
+// LOGIK SEKATAN REAL-TIME: KIRA TARIKH LUPUT 30 HARI
+// ========================================================
+if (!empty($company['created_at'])) {
+    $today = new DateTime(); // Tarikh hari ini
+    $registration_date = new DateTime($company['created_at']);
+    $expiry_date = clone $registration_date;
+    $expiry_date->modify('+30 days'); // Tempoh tamat 30 hari
+
+    // JIKA HARI INI SUDAH LEPAS TARIKH LUPUT ATAU STATUS DI DB MEMANG INACTIVE
+    if ($today >= $expiry_date || $company['subscription_status'] !== 'Active') {
+        echo "<script>
+            alert('We are sorry. This company services are currently unavailable due to subscription maintenance.');
+            window.location.href = 'dashboard.php';
+        </script>";
+        exit;
+    }
+}
+// ========================================================
 
 /* GET CATEGORIES FOR THIS COMPANY */
 $categories = mysqli_query($conn, "
