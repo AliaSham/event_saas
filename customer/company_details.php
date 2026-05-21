@@ -13,6 +13,20 @@ if (!isset($_GET['company_id'])) {
 }
 
 $company_id = $_GET['company_id'];
+$user_id = $_SESSION['user_id']; 
+
+// ========================================================
+// 1. SEMAK STATUS PROFIL (TIDAK SEKAT TERUS, CUMA AMBIL STATUS)
+// ========================================================
+$profileCheckQ = mysqli_query($conn, "
+    SELECT name, phone, address FROM users 
+    WHERE id = '$user_id' AND role = 'customer'
+");
+$profileData = mysqli_fetch_assoc($profileCheckQ);
+
+// Kita buat satu pembolehubah penanda (Flag)
+$is_profile_incomplete = (empty($profileData['name']) || empty($profileData['phone']) || empty($profileData['address']));
+// ========================================================
 
 /* GET COMPANY WITH LIVE EXPIRY CHECK */
 $companyQ = mysqli_query($conn, "
@@ -31,12 +45,11 @@ $company = mysqli_fetch_assoc($companyQ);
 // LOGIK SEKATAN REAL-TIME: KIRA TARIKH LUPUT 30 HARI
 // ========================================================
 if (!empty($company['created_at'])) {
-    $today = new DateTime(); // Tarikh hari ini
+    $today = new DateTime(); 
     $registration_date = new DateTime($company['created_at']);
     $expiry_date = clone $registration_date;
-    $expiry_date->modify('+30 days'); // Tempoh tamat 30 hari
+    $expiry_date->modify('+30 days'); 
 
-    // JIKA HARI INI SUDAH LEPAS TARIKH LUPUT ATAU STATUS DI DB MEMANG INACTIVE
     if ($today >= $expiry_date || $company['subscription_status'] !== 'Active') {
         echo "<script>
             alert('We are sorry. This company services are currently unavailable due to subscription maintenance.');
@@ -59,9 +72,18 @@ $categories = mysqli_query($conn, "
 <html>
 <head>
     <title><?= $company['company_name'] ?> Details</title>
-
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/event_saas/assets/css/style.css">
+    
+    <script>
+    function checkProfileBeforeBooking(event, isIncomplete) {
+        if (isIncomplete) {
+            event.preventDefault(); // Menghalang pautan daripada pergi ke booking.php
+            alert('Please complete your profile details (Name, Phone Number, and Address) before making a booking.');
+            window.location.href = 'account.php'; // Alihkan ke fail akaun (Ubah nama fail jika perlu)
+        }
+    }
+    </script>
 </head>
 
 <body>
@@ -86,15 +108,8 @@ $categories = mysqli_query($conn, "
 
         <div class="company-detail-info">
             <h2><?= $company['company_name'] ?></h2>
-
-            <p class="muted">
-                <?= ucfirst($company['plan']) ?> Plan
-            </p>
-
-            <p>
-                <?= !empty($company['description']) ? $company['description'] : 'No description available.' ?>
-            </p>
-
+            <p class="muted"><?= ucfirst($company['plan']) ?> Plan</p>
+            <p><?= !empty($company['description']) ? $company['description'] : 'No description available.' ?></p>
             <p><strong>Address:</strong> <?= !empty($company['address']) ? $company['address'] : 'Not provided' ?></p>
             <p><strong>Phone:</strong> <?= !empty($company['phone']) ? $company['phone'] : 'Not provided' ?></p>
             <p><strong>Email:</strong> <?= !empty($company['email']) ? $company['email'] : 'Not provided' ?></p>
@@ -121,22 +136,15 @@ $categories = mysqli_query($conn, "
         <?php while($cat = mysqli_fetch_assoc($categories)) { ?>
 
             <div class="category-customer-card">
-
-                <div class="category-icon">
-                    📅
-                </div>
-
+                <div class="category-icon">📅</div>
                 <h3><?= $cat['name'] ?></h3>
-
-                <p>
-                    View available packages and choose your event date for this category.
-                </p>
+                <p>View available packages and choose your event date for this category.</p>
 
                 <a href="booking.php?company_id=<?= $company_id ?>&category_id=<?= $cat['id'] ?>" 
-                   class="btn btn-primary">
+                   class="btn btn-primary"
+                   onclick="checkProfileBeforeBooking(event, <?= $is_profile_incomplete ? 'true' : 'false' ?>)">
                     Select Event
                 </a>
-
             </div>
 
         <?php } ?>
