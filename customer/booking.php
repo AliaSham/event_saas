@@ -25,6 +25,8 @@ $event_date = "";
 $packages = [];
 $vendors = [];
 
+$today_date = date('Y-m-d'); // Mengambil tarikh hari ini untuk semakan backend
+
 /* GET COMPANY */
 $companyQ = mysqli_query($conn, "
     SELECT * FROM companies
@@ -170,6 +172,10 @@ if (isset($_POST['check_availability'])) {
     if ($event_date == "") {
         $error = "Please select event date.";
     }
+    // SEKATAN BACKEND: Menghalang cubaan semakan tarikh lepas
+    elseif ($event_date < $today_date) {
+        $error = "You cannot check availability or book for a past date.";
+    }
     elseif (!isCompanyAvailable($conn, $company_id, $event_date)) {
         $error = "This company is not available on the selected date.";
     }
@@ -188,6 +194,10 @@ if (isset($_POST['submit_booking'])) {
 
     if ($event_date == "" || $package_id == "") {
         $error = "Please select date and package.";
+    }
+    // SEKATAN BACKEND: Menghalang penyerahan borang bertarikh lepas
+    elseif ($event_date < $today_date) {
+        $error = "You cannot complete a booking on a past date.";
     }
     elseif (count($vendor_ids) > $maxAddons) {
         $error = "You can only select up to $maxAddons add-on(s).";
@@ -278,7 +288,8 @@ if (isset($_POST['submit_booking'])) {
         }
     }
 
-    if ($event_date != "" && isCompanyAvailable($conn, $company_id, $event_date)) {
+    // Pastikan opsyen tidak dipanggil jika ralat tarikh berlaku
+    if ($event_date != "" && $event_date >= $today_date && isCompanyAvailable($conn, $company_id, $event_date)) {
         $available = true;
         loadBookingOptions($conn, $company_id, $category_id, $event_date, $packages, $vendors);
     }
@@ -564,6 +575,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (calendarEl) {
 
         let blockedDates = <?= json_encode($blockedDates) ?>;
+        
+        // Mengambil tarikh hari ini mengikut format standard YYYY-MM-DD
+        const todayStr = new Date().toLocaleDateString('en-CA'); 
 
         const calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
@@ -580,6 +594,13 @@ document.addEventListener('DOMContentLoaded', function() {
             dateClick: function(info) {
                 const clickedDate = info.dateStr;
 
+                // 1. SEKATAN JAVASCRIPT: Menghalang klik tarikh lepas
+                if (clickedDate < todayStr) {
+                    alert("Past dates are unavailable for booking. Please select a current or future date.");
+                    return;
+                }
+
+                // 2. Semak jika tarikh tersebut telah disekat/penuh
                 const isBlocked = blockedDates.some(function(event) {
                     return event.start === clickedDate;
                 });
