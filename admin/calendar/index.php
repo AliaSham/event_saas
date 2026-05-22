@@ -8,12 +8,19 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $company_id = $_SESSION['company_id'];
+$today_date = date('Y-m-d'); // Mengambil tarikh hari ini
 
 /* CLOSE DATE */
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'close') {
 
     $event_date = $_POST['event_date'];
     $reason = mysqli_real_escape_string($conn, $_POST['reason']);
+
+    // SEKATAN BACKEND: Pastikan tarikh yang mahu ditutup bukan tarikh lepas
+    if ($event_date < $today_date) {
+        echo "error_past_date";
+        exit;
+    }
 
     $check = mysqli_query($conn, "
         SELECT * FROM company_calendar
@@ -38,6 +45,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'open') {
 
     $event_date = $_POST['event_date'];
+
+    // SEKATAN BACKEND: Pastikan tarikh yang mahu dibuka bukan tarikh lepas
+    if ($event_date < $today_date) {
+        echo "error_past_date";
+        exit;
+    }
 
     mysqli_query($conn, "
         DELETE FROM company_calendar
@@ -139,6 +152,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const calendarEl = document.getElementById('calendar');
     let calendarEvents = <?= json_encode($calendarEvents) ?>;
+    
+    // Dapatkan tarikh hari ini mengikut format YYYY-MM-DD
+    const todayStr = new Date().toLocaleDateString('en-CA'); 
 
     const calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
@@ -154,6 +170,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         dateClick: function(info) {
             const clickedDate = info.dateStr;
+
+            // SEKATAN: Jika klik tarikh lepas
+            if (clickedDate < todayStr) {
+                alert("You cannot manage or change status for past dates.");
+                return;
+            }
 
             const isClosed = calendarEvents.some(function(event) {
                 return event.start === clickedDate && event.title === "Closed";

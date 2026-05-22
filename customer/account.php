@@ -30,11 +30,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     $name = trim($_POST['name']);
     $email = trim($_POST['email']);
+    $phone = trim($_POST['phone']);       // [TAMBAHAN BARU]
+    $address = trim($_POST['address']);   // [TAMBAHAN BARU]
     $new_password = trim($_POST['new_password']);
     $confirm_password = trim($_POST['confirm_password']);
 
-    if ($name == "" || $email == "") {
-        $error = "Name and email are required.";
+    // Pastikan telefon dan alamat tidak dibiarkan kosong
+    if ($name == "" || $email == "" || $phone == "" || $address == "") {
+        $error = "Name, email, phone number, and address are required.";
     } 
     else {
 
@@ -53,11 +56,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         else {
 
+            // SQL UPDATE: Termasuk kolum phone dan address yang baru dimasukkan
             if ($new_password != "") {
                 mysqli_query($conn, "
                     UPDATE users SET
                         name='$name',
                         email='$email',
+                        phone='$phone',
+                        address='$address',
                         password='$new_password'
                     WHERE id='$user_id'
                     AND role='customer'
@@ -66,7 +72,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 mysqli_query($conn, "
                     UPDATE users SET
                         name='$name',
-                        email='$email'
+                        email='$email',
+                        phone='$phone',
+                        address='$address'
                     WHERE id='$user_id'
                     AND role='customer'
                 ");
@@ -91,7 +99,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <html>
 <head>
     <title>My Account</title>
-
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/event_saas/assets/css/style.css">
 </head>
@@ -122,15 +129,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <label>Name</label>
                 <input type="text"
                        name="name"
-                       value="<?= $user['name'] ?>"
+                       value="<?= htmlspecialchars($user['name']) ?>"
                        required>
 
                 <label>Email</label>
                 <input type="email"
                        name="email"
-                       value="<?= $user['email'] ?>"
+                       value="<?= htmlspecialchars($user['email']) ?>"
                        required>
 
+                <label>Phone Number</label>
+                <input type="text"
+                       name="phone"
+                       placeholder="e.g., 0123456789"
+                       value="<?= htmlspecialchars($user['phone'] ?? '') ?>"
+                       required>
+
+                <label>Address</label>
+                <textarea name="address" 
+                          rows="3" 
+                          placeholder="Enter your full shipping or event address"
+                          style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: 'Poppins', sans-serif; box-sizing: border-box; margin-bottom: 15px;"
+                          required><?= htmlspecialchars($user['address'] ?? '') ?></textarea>
                 <label>Role</label>
                 <input type="text"
                        value="<?= ucfirst($user['role']) ?>"

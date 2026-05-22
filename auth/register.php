@@ -4,25 +4,33 @@ include "../config/db.php";
 $error = "";
 $success = "";
 
-if(isset($_POST['register'])){
+if (isset($_POST['register'])) {
 
     $name = $_POST['name'];
     $email = $_POST['email'];
     $password = $_POST['password'];
-    $role = "vendor";
-    $approval_status = "pending";
 
-    $check = mysqli_query($conn, "SELECT * FROM users WHERE email='$email'");
+    $role = "customer";
+    $approval_status = "active";
 
-    if(mysqli_num_rows($check) > 0){
+    $check = mysqli_query($conn, "
+        SELECT * FROM users 
+        WHERE email='$email'
+    ");
+
+    if (mysqli_num_rows($check) > 0) {
         $error = "Email already exists!";
     } else {
 
-        $query = "INSERT INTO users (name, email, password, role, company_id, approval_status)
-                  VALUES ('$name', '$email', '$password', '$role', NULL, '$approval_status')";
+        $query = "
+            INSERT INTO users 
+            (name, email, password, role, company_id, approval_status)
+            VALUES 
+            ('$name', '$email', '$password', '$role', NULL, '$approval_status')
+        ";
 
-        if(mysqli_query($conn, $query)){
-            $success = "Vendor account registered successfully. Please wait for approval.";
+        if (mysqli_query($conn, $query)) {
+            $success = "Customer account registered successfully. You can login now.";
         } else {
             $error = "Error: " . mysqli_error($conn);
         }
@@ -33,7 +41,7 @@ if(isset($_POST['register'])){
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Vendor Register</title>
+    <title>Customer Register</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/event_saas/assets/css/style.css">
@@ -45,13 +53,12 @@ if(isset($_POST['register'])){
 
     <div class="overlay"></div>
 
-    <!-- KEEP ANIMATION -->
     <h1 class="hello-text">hello</h1>
 
     <div class="auth-card">
 
-        <h2 class="auth-title">Vendor Register</h2>
-        <p class="auth-sub">Create your vendor account</p>
+        <h2 class="auth-title">Customer Register</h2>
+        <p class="auth-sub">Create your customer account</p>
 
         <?php if ($error != "") { ?>
             <div class="alert error"><?php echo $error; ?></div>
@@ -63,22 +70,35 @@ if(isset($_POST['register'])){
 
         <form method="POST">
 
-            <input type="text" name="name" placeholder="Enter Vendor Name" required>
-            <input type="email" name="email" placeholder="Enter Email" required>
-            <input type="password" name="password" placeholder="Enter Password" required>
+            <input type="text" 
+                   name="name" 
+                   placeholder="Enter Name" 
+                   required>
 
-            <button class="btn btn-primary" name="register">Register</button>
+            <input type="email" 
+                   name="email" 
+                   placeholder="Enter Email" 
+                   required>
+
+            <input type="password" 
+                   name="password" 
+                   placeholder="Enter Password" 
+                   required>
+
+            <button class="btn btn-primary" name="register">
+                Register
+            </button>
 
         </form>
 
         <p class="auth-link">
             Already have an account?
-            <a href="../auth/login.php">Login</a>
+            <a href="login.php">Login</a>
         </p>
 
         <p class="auth-link">
-            Register as customer?
-            <a href="../auth/register.php">Customer Register</a>
+            Register as vendor?
+            <a href="vendor_register.php">Vendor Register</a>
         </p>
 
     </div>
