@@ -24,6 +24,8 @@ $bookings = mysqli_query($conn, "
     WHERE b.user_id = '$user_id'
     ORDER BY b.id DESC
 ");
+
+$message = isset($_GET['msg']) ? $_GET['msg'] : '';
 ?>
 
 <!DOCTYPE html>
@@ -33,6 +35,72 @@ $bookings = mysqli_query($conn, "
 
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/event_saas/assets/css/style.css">
+    <style>
+        .payment-status-box {
+            background: #f0f7ff;
+            border-left: 4px solid #2196f3;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .payment-status-box.pending {
+            background: #fff3cd;
+            border-color: #ffc107;
+        }
+
+        .payment-status-box.completed {
+            background: #e8f5e9;
+            border-color: #28a745;
+        }
+
+        .payment-action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .payment-action-buttons a,
+        .payment-action-buttons button {
+            padding: 8px 15px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-pay-now {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-pay-now:hover {
+            background: #ee5a52;
+        }
+
+        .btn-view-payment {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-view-payment:hover {
+            background: #5a6268;
+        }
+
+        .alert-message {
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            background: #e8f5e9;
+            border-left: 4px solid #28a745;
+            color: #2e7d32;
+        }
+    </style>
 </head>
 
 <body>
@@ -47,6 +115,12 @@ $bookings = mysqli_query($conn, "
             <p class="muted">View your event booking status and selected add-ons</p>
         </div>
     </div>
+
+    <?php if ($message == 'already_paid') { ?>
+        <div class="alert-message">
+            ✓ This booking has already been paid. No additional payment is required.
+        </div>
+    <?php } ?>
 
     <?php if (mysqli_num_rows($bookings) == 0) { ?>
         <div class="empty-state">
@@ -74,6 +148,20 @@ $bookings = mysqli_query($conn, "
                 JOIN vendor_profiles vp ON u.id = vp.user_id
                 WHERE bv.booking_id = '$booking_id'
             ");
+
+            /* GET PAYMENT STATUS */
+            $paymentQ = mysqli_query($conn, "
+                SELECT * FROM payments
+                WHERE booking_id = '$booking_id'
+            ");
+
+            $payment = null;
+            $deposit_amount = $booking['total_price'] * 0.10;
+            $remaining_amount = $booking['total_price'] * 0.90;
+
+            if (mysqli_num_rows($paymentQ) > 0) {
+                $payment = mysqli_fetch_assoc($paymentQ);
+            }
             ?>
 
             <div class="booking-card">
@@ -126,6 +214,39 @@ $bookings = mysqli_query($conn, "
                     <p><strong>Menu:</strong></p>
                     <p><?= $booking['menu'] ?></p>
                 </div>
+
+                <!-- Payment Status Section -->
+                <?php if ($booking['status'] == 'Payment Pending') { ?>
+                    <div class="payment-status-box pending">
+                        <strong>⏳ Payment Pending</strong>
+                        <p style="margin: 5px 0 0 0;">Deposit (10%): <strong>RM <?= number_format($deposit_amount, 2) ?></strong></p>
+                        <p style="margin: 3px 0 0 0; font-size: 12px; color: #666;">Please complete the payment to confirm your booking.</p>
+                        <div class="payment-action-buttons">
+                            <a href="payment.php?booking_id=<?= $booking_id ?>" class="btn-pay-now">
+                                💳 Pay Now
+                            </a>
+                        </div>
+                    </div>
+                <?php } elseif ($booking['payment_status'] == 'Partial' || $booking['payment_status'] == 'Paid') { ?>
+                    <div class="payment-status-box completed">
+                        <strong>✓ Payment Received</strong>
+                        <p style="margin: 5px 0 0 0;">
+                            Deposit Paid: <strong>RM <?= number_format($deposit_amount, 2) ?></strong>
+                            <?php if ($booking['payment_status'] == 'Paid') { ?>
+                                (Full Amount Paid)
+                            <?php } else { ?>
+                                | Remaining: <strong>RM <?= number_format($remaining_amount, 2) ?></strong>
+                            <?php } ?>
+                        </p>
+                        <?php if ($payment) { ?>
+                            <div class="payment-action-buttons">
+                                <a href="payment_confirmation.php?payment_id=<?= $payment['id'] ?>" class="btn-view-payment">
+                                    📋 View Payment Details
+                                </a>
+                            </div>
+                        <?php } ?>
+                    </div>
+                <?php } ?>
 
                 <div class="booking-section">
                     <p><strong>Selected Add-On / Vendor:</strong></p>
