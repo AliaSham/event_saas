@@ -17,7 +17,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'customer') {
     align-items:center;
     padding:0 50px;
     background:#ffffff;
-    box-shadow:0 2px 12px rgba(0,0,0,0.06);
+    box-shadow:0 2px 12px rgba(0,0,0,0.05);
     box-sizing:border-box;
     position:sticky;
     top:0;
