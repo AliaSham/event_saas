@@ -265,7 +265,7 @@ if (isset($_POST['submit_booking'])) {
                     INSERT INTO bookings
                     (user_id, package_id, event_date, total_price, status, company_id, vendor_id)
                     VALUES
-                    ('$user_id', '$package_id', '$event_date', '$total_price', 'Pending', '$company_id', NULL)
+                    ('$user_id', '$package_id', '$event_date', '$total_price', 'Payment Pending', '$company_id', NULL)
                 ");
 
                 $booking_id = mysqli_insert_id($conn);
@@ -282,7 +282,8 @@ if (isset($_POST['submit_booking'])) {
                     ");
                 }
 
-                header("Location: my_bookings.php");
+                // Redirect to payment page instead of my_bookings
+                header("Location: payment.php?booking_id=$booking_id");
                 exit;
             }
         }
