@@ -77,31 +77,60 @@ if (isset($_POST['submit_payment'])) {
         $error = "Please select a payment method.";
     }
     else {
-        // Create payment record
-        $stmt = $conn->prepare("
-            INSERT INTO payments 
-            (booking_id, user_id, amount, deposit_amount, remaining_amount, payment_method, 
-             bank_ref_number, payment_status, notes)
-            VALUES 
-            (?, ?, ?, ?, ?, ?, ?, 'Pending', ?)
-        ");
-        
         $notes = "Deposit payment for booking #" . $booking_id;
         
-        $stmt->bind_param(
-            "iidddss",
-            $booking_id,
-            $user_id,
-            $total_amount,
-            $deposit_amount,
-            $remaining_amount,
-            $payment_method,
-            $bank_ref_number,
-            $notes
-        );
+        // Check if payment already exists
+        $existingQ = mysqli_query($conn, "SELECT id FROM payments WHERE booking_id = '$booking_id'");
+        
+        if (mysqli_num_rows($existingQ) > 0) {
+            // Update existing payment
+            $existingRow = mysqli_fetch_assoc($existingQ);
+            $payment_id = $existingRow['id'];
+            
+            $stmt = $conn->prepare("
+                UPDATE payments 
+                SET amount = ?, deposit_amount = ?, remaining_amount = ?, payment_method = ?, 
+                    bank_ref_number = ?, payment_status = 'Pending', notes = ?
+                WHERE id = ?
+            ");
+            
+            $stmt->bind_param(
+                "dddsssi",
+                $total_amount,
+                $deposit_amount,
+                $remaining_amount,
+                $payment_method,
+                $bank_ref_number,
+                $notes,
+                $payment_id
+            );
+        } else {
+            // Insert new payment
+            $stmt = $conn->prepare("
+                INSERT INTO payments 
+                (booking_id, user_id, amount, deposit_amount, remaining_amount, payment_method, 
+                 bank_ref_number, payment_status, notes)
+                VALUES 
+                (?, ?, ?, ?, ?, ?, ?, 'Pending', ?)
+            ");
+            
+            $stmt->bind_param(
+                "iidddsss",
+                $booking_id,
+                $user_id,
+                $total_amount,
+                $deposit_amount,
+                $remaining_amount,
+                $payment_method,
+                $bank_ref_number,
+                $notes
+            );
+        }
         
         if ($stmt->execute()) {
-            $payment_id = $stmt->insert_id;
+            if (mysqli_num_rows($existingQ) == 0) {
+                $payment_id = $stmt->insert_id;
+            }
             
             // Update booking status to Payment Pending
             mysqli_query($conn, "
@@ -110,7 +139,16 @@ if (isset($_POST['submit_payment'])) {
                 WHERE id = '$booking_id'
             ");
             
-            // Redirect to payment verification/confirmation
+            // Create admin notification
+            $company_id = $booking['company_id'];
+            $notification_message = "New deposit payment received! Customer: " . $booking['email'] . " | Amount: $" . number_format($deposit_amount, 2) . " | Booking: #" . $booking_id;
+            
+            mysqli_query($conn, "
+                INSERT INTO admin_notifications (type, message, company_id, booking_id, payment_id, is_read, created_at)
+                VALUES ('payment_deposit', '$notification_message', '$company_id', '$booking_id', '$payment_id', 0, NOW())
+            ");
+            
+            // Redirect to payment confirmation page
             header("Location: payment_confirmation.php?payment_id=$payment_id");
             exit;
         } else {

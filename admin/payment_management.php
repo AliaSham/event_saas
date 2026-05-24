@@ -416,7 +416,7 @@ while ($stat = mysqli_fetch_assoc($statsQ)) {
                     <th>Customer</th>
                     <th>Company</th>
                     <th>Event Date</th>
-                    <th>Deposit Amount</th>
+                    <th>Amount Breakdown</th>
                     <th>Payment Method</th>
                     <th>Status</th>
                     <th>Proof</th>
@@ -433,7 +433,19 @@ while ($stat = mysqli_fetch_assoc($statsQ)) {
                         </td>
                         <td><?= $payment['company_name'] ?></td>
                         <td><?= date('d M Y', strtotime($payment['event_date'])) ?></td>
-                        <td><strong>RM <?= number_format($payment['deposit_amount'], 2) ?></strong></td>
+                        <td>
+                            <div style="font-size: 12px;">
+                                <div style="margin-bottom: 5px;">
+                                    <strong style="color: #333;">Total:</strong> RM <?= number_format($payment['amount'], 2) ?>
+                                </div>
+                                <div style="margin-bottom: 5px;">
+                                    <strong style="color: #28a745;">Deposit (10%):</strong> RM <?= number_format($payment['deposit_amount'], 2) ?>
+                                </div>
+                                <div>
+                                    <strong style="color: #999;">Remaining (90%):</strong> RM <?= number_format($payment['remaining_amount'], 2) ?>
+                                </div>
+                            </div>
+                        </td>
                         <td><?= ucfirst(str_replace('_', ' ', $payment['payment_method'])) ?></td>
                         <td>
                             <span class="status-badge <?= strtolower($payment['payment_status']) ?>">

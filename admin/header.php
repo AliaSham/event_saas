@@ -18,10 +18,12 @@ if (!isset($_SESSION['user_id'])) {
         <a href="/event_saas/admin/calendar/index.php">Calendar</a>
         <a href="/event_saas/admin/vendors/index.php">Vendors</a>
         <a href="/event_saas/admin/bookings/index.php">Bookings</a>
+        <a href="/event_saas/admin/payment_management.php">Payments</a>
     </div>
 
     <!-- RIGHT SIDE -->
     <div class="nav-right">
+        <?php include 'notification_widget.php'; ?>
         <a href="/event_saas/auth/logout.php">Logout</a>
     </div>
 
