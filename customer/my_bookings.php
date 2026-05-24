@@ -229,15 +229,19 @@ $message = isset($_GET['msg']) ? $_GET['msg'] : '';
                     </div>
                 <?php } elseif ($booking['payment_status'] == 'Partial' || $booking['payment_status'] == 'Paid') { ?>
                     <div class="payment-status-box completed">
-                        <strong>✓ Payment Received</strong>
-                        <p style="margin: 5px 0 0 0;">
-                            Deposit Paid: <strong>RM <?= number_format($deposit_amount, 2) ?></strong>
-                            <?php if ($booking['payment_status'] == 'Paid') { ?>
-                                (Full Amount Paid)
-                            <?php } else { ?>
-                                | Remaining: <strong>RM <?= number_format($remaining_amount, 2) ?></strong>
-                            <?php } ?>
-                        </p>
+                        <?php if ($booking['payment_status'] == 'Paid') { ?>
+                            <strong>✅ Fully Paid</strong>
+                            <p style="margin: 5px 0 0 0;">Total Amount Paid: <strong>RM <?= number_format($booking['total_price'], 2) ?></strong></p>
+                        <?php } else { ?>
+                            <strong>⏳ Deposit Paid - Balance Pending</strong>
+                            <p style="margin: 5px 0 0 0;">
+                                Deposit Paid: <strong style="color: #4caf50;">RM <?= number_format($deposit_amount, 2) ?></strong>
+                            </p>
+                            <p style="margin: 5px 0 0 0;">
+                                Remaining Balance: <strong style="color: #ff6b6b;">RM <?= number_format($remaining_amount, 2) ?></strong>
+                            </p>
+                            <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">Due before: <?= date('d M Y', strtotime($booking['event_date'])) ?></p>
+                        <?php } ?>
                         <?php if ($payment) { ?>
                             <div class="payment-action-buttons">
                                 <a href="payment_confirmation.php?payment_id=<?= $payment['id'] ?>" class="btn-view-payment">

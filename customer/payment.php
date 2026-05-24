@@ -22,6 +22,7 @@ $bookingQ = mysqli_query($conn, "
         b.*,
         c.company_name,
         p.package_name,
+        p.pax,
         u.email,
         u.phone
     FROM bookings b
@@ -139,15 +140,20 @@ if (isset($_POST['submit_payment'])) {
                 WHERE id = '$booking_id'
             ");
             
-            // Create admin notification
+            // Create admin notification if the table exists
             $company_id = $booking['company_id'];
             $notification_message = "New deposit payment received! Customer: " . $booking['email'] . " | Amount: $" . number_format($deposit_amount, 2) . " | Booking: #" . $booking_id;
-            
-            mysqli_query($conn, "
-                INSERT INTO admin_notifications (type, message, company_id, booking_id, payment_id, is_read, created_at)
-                VALUES ('payment_deposit', '$notification_message', '$company_id', '$booking_id', '$payment_id', 0, NOW())
-            ");
-            
+
+            $notificationTableCheck = mysqli_query($conn, "SHOW TABLES LIKE 'admin_notifications'");
+            if ($notificationTableCheck && mysqli_num_rows($notificationTableCheck) > 0) {
+                mysqli_query($conn, "
+                    INSERT INTO admin_notifications (type, message, company_id, booking_id, payment_id, is_read, created_at)
+                    VALUES ('payment_deposit', '$notification_message', '$company_id', '$booking_id', '$payment_id', 0, NOW())
+                ");
+            } else {
+                error_log("admin_notifications table missing: cannot insert notification for payment_id $payment_id");
+            }
+
             // Redirect to payment confirmation page
             header("Location: payment_confirmation.php?payment_id=$payment_id");
             exit;

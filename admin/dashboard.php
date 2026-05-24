@@ -205,6 +205,24 @@ if (!empty($created_at)) {
             <a href="vendors/index.php" class="btn btn-primary">Open</a>
         </div>
 
+        <div class="admin-card">
+            <div>
+                <div class="card-icon">💳</div>
+                <h3>Manage Payments</h3>
+                <p>View deposits, payment status, and proof of payments.</p>
+            </div>
+            <a href="payment_management.php" class="btn btn-primary">Open</a>
+        </div>
+
+        <div class="admin-card">
+            <div>
+                <div class="card-icon">🔔</div>
+                <h3>Manage Notifications</h3>
+                <p>View all payment and booking notifications.</p>
+            </div>
+            <a href="admin_notifications.php" class="btn btn-primary">Open</a>
+        </div>
+
         <?php if($plan == 'premium'): ?>
         <div class="admin-card">
             <div>

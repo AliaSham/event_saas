@@ -4,19 +4,26 @@
  * Include this file in admin header to show notifications
  */
 
-// Get unread notifications count
-$notificationCountQ = mysqli_query($conn, "
-    SELECT COUNT(*) as count FROM admin_notifications 
-    WHERE is_read = 0
-");
-$notificationCount = mysqli_fetch_assoc($notificationCountQ)['count'];
+// Check that admin_notifications table exists before querying it
+$notificationCount = 0;
+$notificationsQ = false;
 
-// Get recent unread notifications
-$notificationsQ = mysqli_query($conn, "
-    SELECT * FROM admin_notifications 
-    ORDER BY created_at DESC 
-    LIMIT 10
-");
+$tableCheck = mysqli_query($conn, "SHOW TABLES LIKE 'admin_notifications'");
+if ($tableCheck && mysqli_num_rows($tableCheck) > 0) {
+    // Get unread notifications count
+    $notificationCountQ = mysqli_query($conn, "
+        SELECT COUNT(*) as count FROM admin_notifications 
+        WHERE is_read = 0
+    ");
+    $notificationCount = mysqli_fetch_assoc($notificationCountQ)['count'];
+
+    // Get recent notifications
+    $notificationsQ = mysqli_query($conn, "
+        SELECT * FROM admin_notifications 
+        ORDER BY created_at DESC 
+        LIMIT 10
+    ");
+}
 ?>
 
 <style>
@@ -129,7 +136,7 @@ $notificationsQ = mysqli_query($conn, "
                 </div>
             <?php } ?>
             <div class="notification-footer">
-                <a href="admin_notifications.php">View All Notifications</a>
+                <a href="/event_saas/admin/admin_notifications.php">View All Notifications</a>
             </div>
         <?php } else { ?>
             <div class="notification-item">

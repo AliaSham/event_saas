@@ -44,114 +44,74 @@ $success = "";
 
 // Handle payment confirmation
 if (isset($_POST['confirm_payment'])) {
-    
-    // Validate payment proof file upload
-    if (isset($_FILES['payment_proof']) && $_FILES['payment_proof']['size'] > 0) {
-        
-        $file_name = $_FILES['payment_proof']['name'];
-        $file_tmp = $_FILES['payment_proof']['tmp_name'];
-        $file_size = $_FILES['payment_proof']['size'];
-        $file_ext = pathinfo($file_name, PATHINFO_EXTENSION);
-        
-        // Allowed file types
-        $allowed_exts = ['pdf', 'jpg', 'jpeg', 'png', 'gif'];
-        
-        if (!in_array(strtolower($file_ext), $allowed_exts)) {
-            $error = "Invalid file type. Allowed: PDF, JPG, PNG, GIF";
-        } elseif ($file_size > 5000000) { // 5MB limit
-            $error = "File size too large. Max 5MB allowed.";
-        } else {
-            // Create upload directory if not exists
-            $upload_dir = '../uploads/payments/';
-            if (!is_dir($upload_dir)) {
-                mkdir($upload_dir, 0755, true);
-            }
-            
-            // Generate unique filename
-            $new_filename = 'proof_' . $payment_id . '_' . time() . '.' . $file_ext;
-            
-            if (move_uploaded_file($file_tmp, $upload_dir . $new_filename)) {
-                
-                // Update payment with proof file and mark as completed
-                $stmt = $conn->prepare("
-                    UPDATE payments
-                    SET payment_proof_file = ?, payment_status = 'Completed', updated_at = NOW()
-                    WHERE id = ?
-                ");
-                
-                $stmt->bind_param("si", $new_filename, $payment_id);
-                
-                if ($stmt->execute()) {
-                    
-                    // Update booking status to Confirmed
-                    mysqli_query($conn, "
-                        UPDATE bookings
-                        SET payment_status = 'Partial', status = 'Confirmed'
-                        WHERE id = '{$payment['booking_id']}'
-                    ");
-                    
-                    $success = "Payment confirmed! Your booking is now confirmed. You will receive a confirmation email shortly.";
-                    
-                    // Refresh payment data
-                    $paymentQ = mysqli_query($conn, "
-                        SELECT 
-                            p.*,
-                            b.id as booking_id,
-                            c.company_name,
-                            u.email,
-                            u.phone
-                        FROM payments p
-                        JOIN bookings b ON p.booking_id = b.id
-                        JOIN companies c ON b.company_id = c.id
-                        JOIN users u ON p.user_id = u.id
-                        WHERE p.id = '$payment_id'
-                        AND p.user_id = '$user_id'
-                    ");
-                    
-                    $payment = mysqli_fetch_assoc($paymentQ);
-                    
-                } else {
-                    $error = "Error updating payment. Please try again.";
-                }
+    $bank_ref_number = trim($_POST['bank_ref'] ?? '');
+    $has_file = isset($_FILES['payment_proof']) && $_FILES['payment_proof']['size'] > 0;
+
+    if (!$has_file && $bank_ref_number === '') {
+        $error = "Please upload payment proof or enter a reference/transaction number.";
+    } else {
+        $new_filename = null;
+
+        if ($has_file) {
+            $file_name = $_FILES['payment_proof']['name'];
+            $file_tmp = $_FILES['payment_proof']['tmp_name'];
+            $file_size = $_FILES['payment_proof']['size'];
+            $file_ext = pathinfo($file_name, PATHINFO_EXTENSION);
+
+            // Allowed file types
+            $allowed_exts = ['pdf', 'jpg', 'jpeg', 'png', 'gif'];
+
+            if (!in_array(strtolower($file_ext), $allowed_exts)) {
+                $error = "Invalid file type. Allowed: PDF, JPG, PNG, GIF.";
+            } elseif ($file_size > 5000000) { // 5MB limit
+                $error = "File size too large. Max 5MB allowed.";
             } else {
-                $error = "Error uploading file. Please try again.";
+                // Create upload directory if not exists
+                $upload_dir = '../uploads/payments/';
+                if (!is_dir($upload_dir)) {
+                    mkdir($upload_dir, 0755, true);
+                }
+
+                $new_filename = 'proof_' . $payment_id . '_' . time() . '.' . $file_ext;
+
+                if (!move_uploaded_file($file_tmp, $upload_dir . $new_filename)) {
+                    $error = "Error uploading file. Please try again.";
+                }
             }
         }
-    } else {
-        // Allow confirmation without proof (admin can follow up)
-        $stmt = $conn->prepare("
-            UPDATE payments
-            SET payment_status = 'Completed', updated_at = NOW()
-            WHERE id = ?
-        ");
-        
-        $stmt->bind_param("i", $payment_id);
-        
-        if ($stmt->execute()) {
-            mysqli_query($conn, "
-                UPDATE bookings
-                SET payment_status = 'Partial', status = 'Confirmed'
-                WHERE id = '{$payment['booking_id']}'
-            ");
-            
-            $success = "Payment confirmed! Your booking is now confirmed.";
-            
-            $paymentQ = mysqli_query($conn, "
-                SELECT 
-                    p.*,
-                    b.id as booking_id,
-                    c.company_name,
-                    u.email,
-                    u.phone
-                FROM payments p
-                JOIN bookings b ON p.booking_id = b.id
-                JOIN companies c ON b.company_id = c.id
-                JOIN users u ON p.user_id = u.id
-                WHERE p.id = '$payment_id'
-                AND p.user_id = '$user_id'
-            ");
-            
-            $payment = mysqli_fetch_assoc($paymentQ);
+
+        if ($error === '') {
+            if ($new_filename !== null) {
+                $stmt = $conn->prepare("UPDATE payments SET payment_proof_file = ?, bank_ref_number = ?, payment_status = 'Completed', updated_at = NOW() WHERE id = ?");
+                $stmt->bind_param("ssi", $new_filename, $bank_ref_number, $payment_id);
+            } else {
+                $stmt = $conn->prepare("UPDATE payments SET bank_ref_number = ?, payment_status = 'Completed', updated_at = NOW() WHERE id = ?");
+                $stmt->bind_param("si", $bank_ref_number, $payment_id);
+            }
+
+            if ($stmt->execute()) {
+                mysqli_query($conn, "UPDATE bookings SET payment_status = 'Partial', status = 'Confirmed' WHERE id = '{$payment['booking_id']}'");
+                $success = "Payment confirmed! Your booking is now confirmed.";
+
+                $paymentQ = mysqli_query($conn, "
+                    SELECT 
+                        p.*,
+                        b.id as booking_id,
+                        c.company_name,
+                        u.email,
+                        u.phone
+                    FROM payments p
+                    JOIN bookings b ON p.booking_id = b.id
+                    JOIN companies c ON b.company_id = c.id
+                    JOIN users u ON p.user_id = u.id
+                    WHERE p.id = '$payment_id'
+                    AND p.user_id = '$user_id'
+                ");
+
+                $payment = mysqli_fetch_assoc($paymentQ);
+            } else {
+                $error = "Error updating payment. Please try again.";
+            }
         }
     }
 }
@@ -403,6 +363,22 @@ $bankDetailsQ = mysqli_query($conn, "
 
     </div>
 
+    <!-- Payment Plan Reminder -->
+    <div class="confirmation-card" style="background: #fff3cd; border-left: 4px solid #ff9800;">
+        <h3>⚠️ Important - Your Payment Plan</h3>
+        <div style="margin-top: 15px;">
+            <p style="margin: 10px 0;"><strong>Amount You Just Paid (Deposit):</strong></p>
+            <p style="font-size: 18px; color: #ff6b6b; font-weight: bold; margin: 5px 0;">RM <?= number_format($payment['deposit_amount'], 2) ?> (10%)</p>
+            
+            <p style="margin: 15px 0 10px 0; border-top: 1px solid #ffc107; padding-top: 15px;"><strong>Remaining Balance (Still Due):</strong></p>
+            <p style="font-size: 18px; color: #ff6b6b; font-weight: bold; margin: 5px 0;">RM <?= number_format($payment['remaining_amount'], 2) ?> (90%)</p>
+            
+            <p style="margin: 15px 0 0 0; color: #333;"><strong>Due Date:</strong> Before your event date</p>
+            
+            <p style="margin: 15px 0 0 0; padding: 12px; background: #ffecb3; border-radius: 4px; color: #333;">You will be reminded to pay the remaining balance before your event date.</p>
+        </div>
+    </div>
+
     <!-- Payment Instructions -->
     <?php if ($payment['payment_status'] == 'Pending') { ?>
         
@@ -439,9 +415,9 @@ $bankDetailsQ = mysqli_query($conn, "
             <form method="POST" enctype="multipart/form-data" style="margin-top: 30px;">
 
                 <div class="form-group">
-                    <label for="payment_proof">📸 Upload Payment Proof (Optional)</label>
+                    <label for="payment_proof">📸 Upload Payment Proof</label>
                     <p class="muted" style="font-size: 13px; margin: 5px 0 10px 0;">
-                        Upload screenshot, transfer receipt or bank slip. Allowed formats: PDF, JPG, PNG, GIF (Max 5MB)
+                        Upload screenshot, transfer receipt or bank slip. Allowed formats: PDF, JPG, PNG, GIF (Max 5MB). Either upload proof or enter a reference number below.
                     </p>
                     <input type="file" 
                            id="payment_proof" 
@@ -450,7 +426,7 @@ $bankDetailsQ = mysqli_query($conn, "
                 </div>
 
                 <div class="form-group">
-                    <label for="reference">Reference / Transaction Number (Optional)</label>
+                    <label for="reference">Reference / Transaction Number</label>
                     <input type="text" 
                            id="reference" 
                            name="bank_ref" 
@@ -490,8 +466,6 @@ $bankDetailsQ = mysqli_query($conn, "
     <?php } ?>
 
 </div>
-
-<?php include('header.php'); /* Close HTML */ ?>
 
 </body>
 </html>

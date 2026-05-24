@@ -421,7 +421,4 @@ $vendorQ = mysqli_query($conn, "
 
 </div>
 
-<?php include('footer.php'); ?>
 
-</body>
-</html>
