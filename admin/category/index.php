@@ -49,3 +49,5 @@ $result = mysqli_query($conn, "
     <?php } ?>
 
 </div>
+
+<?php include('../footer.php'); ?>

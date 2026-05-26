@@ -76,7 +76,7 @@ while ($row = mysqli_fetch_assoc($closedResult)) {
     $calendarEvents[] = [
         'title' => 'Closed',
         'start' => $row['event_date'],
-        'backgroundColor' => '#ff4d4f',
+        'backgroundColor' => '#ff4d4f', // Ikut CSS asal awak
         'borderColor' => '#ff4d4f',
         'textColor' => '#ffffff'
     ];
@@ -92,11 +92,11 @@ $bookingResult = mysqli_query($conn, "
 while ($row = mysqli_fetch_assoc($bookingResult)) {
 
     if ($row['status'] == 'Pending') {
-        $color = '#facc15';
+        $color = '#facc15'; // Ikut CSS asal awak
         $textColor = '#000000';
     } 
     elseif ($row['status'] == 'Confirmed') {
-        $color = '#22c55e';
+        $color = '#22c55e'; // Ikut CSS asal awak
         $textColor = '#ffffff';
     } 
     else {
@@ -113,36 +113,36 @@ while ($row = mysqli_fetch_assoc($bookingResult)) {
     ];
 }
 
+// ─── 1. PANGGIL ROTI ATAS (HEADER) ───
 include('../header.php');
 ?>
 
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
 
-<div class="container">
+<style>
+    .fc { font-family: 'Poppins', sans-serif; }
+    .fc-col-header-cell-cushion, .fc-daygrid-day-number { text-decoration: none !important; }
+</style>
 
-    <div class="page-header">
-        <div>
-            <h2 class="page-title">Manage Calendar</h2>
-            <p class="muted">Close dates that are unavailable for booking</p>
-        </div>
-    </div>
+<div class="page-header" style="margin-bottom: 25px;">
+    <h2 style="margin: 0 0 5px 0; font-size: 24px; font-weight: 600;">Manage Calendar</h2>
+    <p style="margin: 0; color: #6b7280; font-size: 14px;">Close dates that are unavailable for booking</p>
+</div>
 
-    <div class="calendar-wrapper">
+<div class="calendar-wrapper">
 
-        <div id="calendar"></div>
+    <div id="calendar"></div>
 
-        <div class="calendar-info bottom-info">
-            <span class="legend-box closed-box"></span>
-            <span>Closed</span>
+    <div class="calendar-info bottom-info">
+        <span class="legend-box closed-box"></span>
+        <span>Closed</span>
 
-            <span class="legend-box pending-box"></span>
-            <span>Pending Booking</span>
+        <span class="legend-box pending-box"></span>
+        <span>Pending Booking</span>
 
-            <span class="legend-box confirmed-box"></span>
-            <span>Confirmed Booking</span>
-        </div>
-
+        <span class="legend-box confirmed-box"></span>
+        <span>Confirmed Booking</span>
     </div>
 
 </div>
@@ -153,12 +153,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const calendarEl = document.getElementById('calendar');
     let calendarEvents = <?= json_encode($calendarEvents) ?>;
     
-    // Dapatkan tarikh hari ini mengikut format YYYY-MM-DD
     const todayStr = new Date().toLocaleDateString('en-CA'); 
 
     const calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
-        contentHeight: 500,
+        contentHeight: 520,
 
         headerToolbar: {
             left: 'prev,next today',
@@ -171,7 +170,6 @@ document.addEventListener('DOMContentLoaded', function() {
         dateClick: function(info) {
             const clickedDate = info.dateStr;
 
-            // SEKATAN: Jika klik tarikh lepas
             if (clickedDate < todayStr) {
                 alert("You cannot manage or change status for past dates.");
                 return;
@@ -230,3 +228,5 @@ document.addEventListener('DOMContentLoaded', function() {
     calendar.render();
 });
 </script>
+
+<?php include('../footer.php'); ?>

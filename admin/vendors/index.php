@@ -190,4 +190,5 @@ $vendors = mysqli_query($conn, "
 
     </div>
 
+<?php include('../footer.php'); ?>
 </div>

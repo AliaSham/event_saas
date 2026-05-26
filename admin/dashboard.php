@@ -91,152 +91,119 @@ if (!empty($created_at)) {
 }
 ?>
 
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Admin Dashboard</title>
+<?php include('header.php'); ?>
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="../assets/css/style.css">
-    
-    <style>
-        .expiry-banner {
-            background-color: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeeba;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            font-family: 'Poppins', sans-serif;
-            font-size: 14px;
-        }
-    </style>
-</head>
-
-<body>
-
-<div class="navbar">
-
-    <div>
-        <b>Admin Dashboard</b>
-    </div>
-
-    <div>
-        <a href="../auth/logout.php" class="logout">
-            Logout
-        </a>
-    </div>
-
+<div class="page-header" style="margin-bottom: 30px;">
+    <h2 style="margin: 0 0 5px 0; font-size: 24px; font-weight: 600;">Welcome, Admin</h2>
+    <p style="margin: 0; color: #6b7280; font-size: 14px;">An easy way to manage sales and event operations with care and precision.</p>
 </div>
 
-<div class="container admin-dashboard">
+<?php if (!empty($expiry_alert_message)): ?>
+    <div class="expiry-banner" style="background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; padding: 15px 20px; margin-bottom: 30px; border-radius: 10px; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+        <?= $expiry_alert_message ?>
+    </div>
+<?php endif; ?>
 
-    <h2>Welcome, Admin</h2>
+<div style="display: flex; gap: 20px; margin-bottom: 30px; flex-wrap: wrap;">
+    <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 15px 25px; flex: 1; min-width: 200px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); display: flex; flex-direction: column;">
+        <span style="font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">SaaS Company ID</span>
+        <span style="font-size: 18px; font-weight: 600; color: #1f2937; margin-top: 2px;">#<?= $company_id ?></span>
+    </div>
+    <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 15px 25px; flex: 1; min-width: 200px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); display: flex; flex-direction: column;">
+        <span style="font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Current Tier Plan</span>
+        <span style="font-size: 18px; font-weight: 600; color: #2563eb; margin-top: 2px;"><?= strtoupper($plan) ?></span>
+    </div>
+    <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 15px 25px; flex: 1; min-width: 200px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); display: flex; flex-direction: column;">
+        <span style="font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Subscription Status</span>
+        <span style="font-size: 18px; font-weight: 600; color: #22c55e; margin-top: 2px;">Active</span>
+    </div>
+</div>
 
-    <?php if (!empty($expiry_alert_message)): ?>
-        <div class="expiry-banner">
-            <?= $expiry_alert_message ?>
+<div class="admin-grid">
+
+    <div class="admin-card">
+        <div>
+            <div class="card-icon" style="color: #3b82f6;">🏢</div>
+            <h3>Company Profile</h3>
+            <p>Update your company details shown to customers seamlessly.</p>
         </div>
+        <a href="company_profile.php" class="btn btn-primary">Open Module</a>
+    </div>
+
+    <div class="admin-card">
+        <div>
+            <div class="card-icon" style="color: #a855f7;">📂</div>
+            <h3>Manage Categories</h3>
+            <p>Create, format, and organize diverse event classifications.</p>
+        </div>
+        <a href="category/index.php" class="btn btn-primary">Open Module</a>
+    </div>
+
+    <div class="admin-card">
+        <div>
+            <div class="card-icon" style="color: #f59e0b;">📖</div>
+            <h3>Manage Packages</h3>
+            <p>Create scalable client packages limited by SaaS dynamic allocations.</p>
+        </div>
+        <a href="package/index.php" class="btn btn-primary">Open Module</a>
+    </div>
+
+    <div class="admin-card">
+        <div>
+            <div class="card-icon" style="color: #10b981;">📋</div>
+            <h3>Manage Bookings</h3>
+            <p>Review standard customer bookings, verify details, and handle approval flows.</p>
+        </div>
+        <a href="bookings/index.php" class="btn btn-primary">Open Module</a>
+    </div>
+
+    <div class="admin-card">
+        <div>
+            <div class="card-icon" style="color: #ec4899;">📅</div>
+            <h3>Manage Calendar</h3>
+            <p>Maintain timeline accuracy by closing unavailable calendar booking slots.</p>
+        </div>
+        <a href="calendar/index.php" class="btn btn-primary">Open Module</a>
+    </div>
+
+    <div class="admin-card">
+        <div>
+            <div class="card-icon" style="color: #6366f1;">🤝</div>
+            <h3>Manage Vendors</h3>
+            <p>Incorporate global outsourced vendor profiles matching system policies.</p>
+        </div>
+        <a href="vendors/index.php" class="btn btn-primary">Open Module</a>
+    </div>
+
+    <div class="admin-card">
+        <div>
+            <div class="card-icon" style="color: #14b8a6;">💳</div>
+            <h3>Manage Payments</h3>
+            <p>Audit incoming client security deposits, record balances, and manage slips.</p>
+        </div>
+        <a href="payment_management.php" class="btn btn-primary">Open Module</a>
+    </div>
+
+    <div class="admin-card">
+        <div>
+            <div class="card-icon" style="color: #f43f5e;">🔔</div>
+            <h3>Manage Notifications</h3>
+            <p>Track general transactional activity logs and security alerts instantly.</p>
+        </div>
+        <a href="admin_notifications.php" class="btn btn-primary">Open Module</a>
+    </div>
+
+    <?php if($plan == 'premium'): ?>
+    <div class="admin-card" style="border: 1px dashed #22c55e; background-color: rgba(74, 222, 128, 0.02);">
+        <div>
+            <div class="card-icon" style="background-color: #152d22; color: #22c55e;">📊</div>
+            <h3>Premium Dashboard</h3>
+            <p>Gain absolute workspace clarity using intelligence graphs and performance charts.</p>
+        </div>
+        <a href="premium_dashboard.php" class="btn btn-primary" style="background-color: #22c55e; color: #ffffff;">Unlock Insights</a>
+    </div>
     <?php endif; ?>
 
-    <p class="company-id">
-        Company ID: <?= $company_id ?>
-    </p>
-
-    <p class="company-id">
-        Current Plan:
-        <b><?= strtoupper($plan) ?></b>
-    </p>
-
-    <div class="admin-grid">
-
-        <div class="admin-card">
-            <div>
-                <div class="card-icon">🏢</div>
-                <h3>Company Profile</h3>
-                <p>Update your company details shown to customers.</p>
-            </div>
-            <a href="company_profile.php" class="btn btn-primary">Open</a>
-        </div>
-
-        <div class="admin-card">
-            <div>
-                <div class="card-icon">📂</div>
-                <h3>Manage Categories</h3>
-                <p>Create and organize event types.</p>
-            </div>
-            <a href="category/index.php" class="btn btn-primary">Open</a>
-        </div>
-
-        <div class="admin-card">
-            <div>
-                <div class="card-icon">📖</div>
-                <h3>Manage Packages</h3>
-                <p>Create packages with SaaS limits.</p>
-            </div>
-            <a href="package/index.php" class="btn btn-primary">Open</a>
-        </div>
-
-        <div class="admin-card">
-            <div>
-                <div class="card-icon">📋</div>
-                <h3>Manage Bookings</h3>
-                <p>Review customer bookings and approve or reject requests.</p>
-            </div>
-            <a href="bookings/index.php" class="btn btn-primary">Open</a>
-        </div>
-
-        <div class="admin-card">
-            <div>
-                <div class="card-icon">📅</div>
-                <h3>Manage Calendar</h3>
-                <p>Close unavailable dates for booking.</p>
-            </div>
-            <a href="calendar/index.php" class="btn btn-primary">Open</a>
-        </div>
-
-        <div class="admin-card">
-            <div>
-                <div class="card-icon">🤝</div>
-                <h3>Manage Vendors</h3>
-                <p>Select vendors based on your subscription plan.</p>
-            </div>
-            <a href="vendors/index.php" class="btn btn-primary">Open</a>
-        </div>
-
-        <div class="admin-card">
-            <div>
-                <div class="card-icon">💳</div>
-                <h3>Manage Payments</h3>
-                <p>View deposits, payment status, and proof of payments.</p>
-            </div>
-            <a href="payment_management.php" class="btn btn-primary">Open</a>
-        </div>
-
-        <div class="admin-card">
-            <div>
-                <div class="card-icon">🔔</div>
-                <h3>Manage Notifications</h3>
-                <p>View all payment and booking notifications.</p>
-            </div>
-            <a href="admin_notifications.php" class="btn btn-primary">Open</a>
-        </div>
-
-        <?php if($plan == 'premium'): ?>
-        <div class="admin-card">
-            <div>
-                <div class="card-icon">📊</div>
-                <h3>Premium Dashboard</h3>
-                <p>Advanced analytics, charts and revenue reports.</p>
-            </div>
-            <a href="premium_dashboard.php" class="btn btn-primary">Open</a>
-        </div>
-        <?php endif; ?>
-
-    </div>
-
 </div>
 
-</body>
-</html>
+<?php include('footer.php'); ?>
