@@ -125,36 +125,42 @@ $current_plan = isset($plan) ? strtolower($plan) : 'standard';
             min-width: 0;
         }
 
+        /* TOP NAVBAR */
         .top-navbar {
-            background: linear-gradient(90deg, rgba(3,61,33,1) 0%, rgba(6,95,70,1) 100%);
+            background: #ffffff !important;
             height: 64px;
             padding: 0 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-            box-shadow: 0 6px 18px rgba(6,95,70,0.06);
+            border-bottom: 1px solid #e5f0ea !important;
+            box-shadow: 0 1px 12px rgba(34, 197, 94, 0.07), 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+            position: sticky;
+            top: 0;
+            z-index: 50;
         }
 
         .top-navbar .brand {
             display: flex;
             align-items: center;
             gap: 12px;
-            color: #ffffff;
+            color: #1a2e23 !important;
             font-weight: 700;
             font-size: 16px;
+            text-decoration: none;
         }
 
         .top-navbar .brand .logo {
             width: 36px;
             height: 36px;
             border-radius: 8px;
-            background: rgba(255,255,255,0.06);
+            background: #f0faf4 !important;
+            border: 1px solid #d1f0de !important;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--primary-color);
+            color: #22c55e !important;
             font-weight: 800;
             font-size: 18px;
         }
@@ -164,19 +170,34 @@ $current_plan = isset($plan) ? strtolower($plan) : 'standard';
         .top-navbar-right { display: flex; align-items: center; gap: 12px; }
 
         .nav-icon {
-            color: rgba(255,255,255,0.9);
-            width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center;
-            border-radius: 10px; background: rgba(255,255,255,0.03); text-decoration: none;
+            color: #3a5a46 !important;
+            width: 40px;
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background: #f0faf4 !important;
+            border: 1px solid #d1f0de !important;
+            text-decoration: none;
             transition: background 0.15s ease, transform 0.12s ease;
         }
-        .nav-icon:hover { background: rgba(255,255,255,0.06); transform: translateY(-2px); }
+        .nav-icon:hover { background: #dcf5e7 !important; transform: translateY(-2px); }
 
-        .admin-role-badge { background-color: rgba(255,255,255,0.08); color: #dff7ea; padding: 6px 10px; border-radius: 10px; font-size: 12px; font-weight: 700; }
+        .admin-role-badge {
+            background-color: #f0faf4 !important;
+            color: #166534 !important;
+            padding: 6px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            border: 1px solid #d1f0de !important;
+        }
 
-        .btn-logout-link { color: #ffeef0; text-decoration: none; font-size: 13px; font-weight: 600; }
+        .btn-logout-link { color: #dc2626; text-decoration: none; font-size: 13px; font-weight: 600; }
 
         .user-menu { position: relative; padding-bottom: 8px; }
-        .user-menu::after { /* invisible hover bridge to prevent accidental gap */
+        .user-menu::after {
             content: '';
             position: absolute;
             left: 0;
@@ -184,15 +205,20 @@ $current_plan = isset($plan) ? strtolower($plan) : 'standard';
             top: 100%;
             height: 10px;
         }
-        .user-menu .user-name { color: #ffffff; font-weight: 600; font-size: 13px; cursor: pointer; }
+        .user-menu .user-name {
+            color: #1a2e23 !important;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+        }
         .user-menu .dropdown {
             position: absolute;
             right: 0;
             top: calc(100% + 6px);
             background: #ffffff;
-            border: 1px solid #e6efe6;
+            border: 1px solid #e5f0ea;
             border-radius: 8px;
-            box-shadow: 0 8px 28px rgba(6,95,70,0.08);
+            box-shadow: 0 8px 28px rgba(34, 197, 94, 0.08), 0 2px 8px rgba(0, 0, 0, 0.05);
             opacity: 0;
             visibility: hidden;
             transform: translateY(-6px);
@@ -201,7 +227,14 @@ $current_plan = isset($plan) ? strtolower($plan) : 'standard';
             pointer-events: none;
             z-index: 60;
         }
-        .user-menu .dropdown a { display: block; padding: 10px 12px; color: #0f172a; text-decoration: none; font-size: 14px; }
+        .user-menu .dropdown a {
+            display: block;
+            padding: 10px 12px;
+            color: #1a2e23;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .user-menu .dropdown a:hover { background: #f0faf4; }
         .user-menu:hover .dropdown,
         .user-menu .dropdown:hover {
             opacity: 1;
@@ -212,7 +245,6 @@ $current_plan = isset($plan) ? strtolower($plan) : 'standard';
 
         .content-body { padding: 28px; max-width: 1400px; width: 100%; box-sizing: border-box; }
 
-        /* Kemasan tambahan global untuk jadual (tables) & borang (forms) halaman dalaman */
         .page-inner-card {
             background: #ffffff;
             padding: 30px;

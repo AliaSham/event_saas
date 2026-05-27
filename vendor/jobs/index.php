@@ -67,7 +67,7 @@ if (isset($_GET['action']) && isset($_GET['booking_vendor_id'])) {
     exit;
 }
 
-/* GET VENDOR JOBS */
+/* GET VENDOR JOBS (limited fields for vendor view) */
 $jobs = mysqli_query($conn, "
     SELECT 
         bv.id AS booking_vendor_id,
@@ -77,22 +77,18 @@ $jobs = mysqli_query($conn, "
         b.id AS booking_id,
         b.event_date,
         b.status,
-        b.total_price,
 
         c.company_name,
 
-        p.package_name,
-        p.pax,
-        p.menu,
-        p.description AS package_description,
-
         u.name AS customer_name,
-        u.email AS customer_email
+        u.email AS customer_email,
+
+        vp.service_type AS vendor_service_type
     FROM booking_vendors bv
     JOIN bookings b ON bv.booking_id = b.id
     JOIN companies c ON b.company_id = c.id
-    JOIN packages p ON b.package_id = p.id
     JOIN users u ON b.user_id = u.id
+    LEFT JOIN vendor_profiles vp ON bv.vendor_id = vp.user_id
     WHERE bv.vendor_id = '$vendor_id'
     ORDER BY b.event_date DESC
 ");
@@ -134,117 +130,61 @@ $jobs = mysqli_query($conn, "
             <div class="booking-card">
 
                 <div class="booking-card-header">
-
                     <div>
-                        <h3><?= $job['package_name'] ?></h3>
-                        <p class="muted">
-                            Booking ID: #<?= $job['booking_id'] ?>
-                        </p>
+                        <h3>Booking #<?= $job['booking_id'] ?></h3>
+                        <p class="muted"><?= htmlspecialchars($job['company_name']) ?></p>
                     </div>
 
-                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                        <span class="status-badge status-<?= strtolower($job['status']) ?>">
-                            Booking: <?= $job['status'] ?>
-                        </span>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                        <div style="text-align:right;">
+                            <div style="font-size:13px; color:#718096;">Event Date</div>
+                            <div style="font-weight:700;"><?= htmlspecialchars($job['event_date']) ?></div>
+                        </div>
 
-                        <span class="status-badge vendor-status-<?= strtolower(str_replace(' ', '-', $job['vendor_status'])) ?>">
-                            Job: <?= $job['vendor_status'] ?>
-                        </span>
+                        <div>
+                            <span class="status-badge status-<?= strtolower($job['status']) ?>">Booking: <?= $job['status'] ?></span>
+                            <br>
+                            <span class="status-badge vendor-status-<?= strtolower(str_replace(' ', '-', $job['vendor_status'])) ?>">Job: <?= $job['vendor_status'] ?></span>
+                        </div>
                     </div>
-
                 </div>
 
                 <div class="booking-info-grid">
-
                     <div>
-                        <p><strong>Company:</strong></p>
-                        <p><?= $job['company_name'] ?></p>
+                        <p><strong>Customer</strong></p>
+                        <p><?= htmlspecialchars($job['customer_name']) ?></p>
                     </div>
 
                     <div>
-                        <p><strong>Customer:</strong></p>
-                        <p><?= $job['customer_name'] ?></p>
+                        <p><strong>Email</strong></p>
+                        <p><?= htmlspecialchars($job['customer_email']) ?></p>
                     </div>
 
                     <div>
-                        <p><strong>Customer Email:</strong></p>
-                        <p><?= $job['customer_email'] ?></p>
+                        <p><strong>Service</strong></p>
+                        <p><?= htmlspecialchars($job['vendor_service_type'] ?? 'Service') ?></p>
                     </div>
 
                     <div>
-                        <p><strong>Event Date:</strong></p>
-                        <p><?= $job['event_date'] ?></p>
-                    </div>
-
-                    <div>
-                        <p><strong>Your Service Price:</strong></p>
+                        <p><strong>Price</strong></p>
                         <p>RM <?= number_format($job['vendor_price'], 2) ?></p>
                     </div>
 
-                    <div>
-                        <p><strong>Booking Total:</strong></p>
-                        <p>RM <?= number_format($job['total_price'], 2) ?></p>
-                    </div>
-
-                </div>
-
-                <div class="booking-section">
-                    <p><strong>Package Pax:</strong></p>
-                    <p><?= $job['pax'] ?> pax</p>
-                </div>
-
-                <div class="booking-section">
-                    <p><strong>Package Description:</strong></p>
-                    <p><?= $job['package_description'] ?></p>
-                </div>
-
-                <div class="booking-section">
-                    <p><strong>Menu:</strong></p>
-                    <p><?= $job['menu'] ?></p>
-                </div>
-
-                <div class="booking-section">
-
-                    <?php if ($job['status'] == 'Pending') { ?>
-
-                        <div class="alert warning">
-                            This booking is still pending admin approval. You cannot update job progress yet.
-                        </div>
-
-                    <?php } elseif ($job['status'] == 'Rejected') { ?>
-
-                        <div class="alert error">
-                            This booking has been rejected. No action is required.
-                        </div>
-
-                    <?php } elseif ($job['status'] == 'Confirmed') { ?>
-
-                        <?php if ($job['vendor_status'] == 'Confirmed') { ?>
-
-                            <a href="index.php?action=start&booking_vendor_id=<?= $job['booking_vendor_id'] ?>" 
-                               class="btn btn-primary"
-                               onclick="return confirm('Start this job?');">
-                                Start Job
-                            </a>
-
-                        <?php } elseif ($job['vendor_status'] == 'In Progress') { ?>
-
-                            <a href="index.php?action=complete&booking_vendor_id=<?= $job['booking_vendor_id'] ?>" 
-                               class="btn btn-success"
-                               onclick="return confirm('Mark this job as completed?');">
-                                Mark Completed
-                            </a>
-
-                        <?php } elseif ($job['vendor_status'] == 'Completed') { ?>
-
-                            <div class="alert success">
-                                This job has been completed.
-                            </div>
-
+                    <div style="grid-column: 1 / -1; display:flex; gap:12px; align-items:center;">
+                        <?php if ($job['status'] == 'Pending') { ?>
+                            <div class="alert warning">This booking is pending approval. Actions unavailable.</div>
+                        <?php } elseif ($job['status'] == 'Rejected') { ?>
+                            <div class="alert error">This booking was rejected. No action required.</div>
+                        <?php } elseif ($job['status'] == 'Confirmed') { ?>
+                            <?php if ($job['vendor_status'] == 'Confirmed') { ?>
+                                <a href="index.php?action=start&booking_vendor_id=<?= $job['booking_vendor_id'] ?>" class="btn btn-primary" onclick="return confirm('Start this job?');">Start Job</a>
+                            <?php } elseif ($job['vendor_status'] == 'In Progress') { ?>
+                                <a href="index.php?action=complete&booking_vendor_id=<?= $job['booking_vendor_id'] ?>" class="btn btn-success" onclick="return confirm('Mark this job as completed?');">Mark Completed</a>
+                            <?php } elseif ($job['vendor_status'] == 'Completed') { ?>
+                                <div class="alert success">This job has been completed.</div>
+                            <?php } ?>
                         <?php } ?>
-
-                    <?php } ?>
-
+                    </div>
                 </div>
 
             </div>
