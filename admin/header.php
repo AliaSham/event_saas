@@ -126,53 +126,91 @@ $current_plan = isset($plan) ? strtolower($plan) : 'standard';
         }
 
         .top-navbar {
-            background-color: #ffffff;
-            height: 70px;
-            padding: 0 40px;
+            background: linear-gradient(90deg, rgba(3,61,33,1) 0%, rgba(6,95,70,1) 100%);
+            height: 64px;
+            padding: 0 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border-bottom: 1px solid var(--border-color);
+            gap: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            box-shadow: 0 6px 18px rgba(6,95,70,0.06);
         }
 
-        .search-wrapper input {
-            background-color: #f3f4f6;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            width: 250px;
-            outline: none;
-        }
-
-        .top-navbar-right {
+        .top-navbar .brand {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 12px;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 16px;
         }
 
-        .admin-role-badge {
-            background-color: #e8f5e9;
-            color: #2e7d32;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
+        .top-navbar .brand .logo {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+            font-weight: 800;
+            font-size: 18px;
         }
 
-        .btn-logout-link {
-            color: #ef4444;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
+        .top-navbar-left { display: flex; align-items: center; gap: 16px; }
+
+        .top-navbar-right { display: flex; align-items: center; gap: 12px; }
+
+        .nav-icon {
+            color: rgba(255,255,255,0.9);
+            width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center;
+            border-radius: 10px; background: rgba(255,255,255,0.03); text-decoration: none;
+            transition: background 0.15s ease, transform 0.12s ease;
+        }
+        .nav-icon:hover { background: rgba(255,255,255,0.06); transform: translateY(-2px); }
+
+        .admin-role-badge { background-color: rgba(255,255,255,0.08); color: #dff7ea; padding: 6px 10px; border-radius: 10px; font-size: 12px; font-weight: 700; }
+
+        .btn-logout-link { color: #ffeef0; text-decoration: none; font-size: 13px; font-weight: 600; }
+
+        .user-menu { position: relative; padding-bottom: 8px; }
+        .user-menu::after { /* invisible hover bridge to prevent accidental gap */
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 100%;
+            height: 10px;
+        }
+        .user-menu .user-name { color: #ffffff; font-weight: 600; font-size: 13px; cursor: pointer; }
+        .user-menu .dropdown {
+            position: absolute;
+            right: 0;
+            top: calc(100% + 6px);
+            background: #ffffff;
+            border: 1px solid #e6efe6;
+            border-radius: 8px;
+            box-shadow: 0 8px 28px rgba(6,95,70,0.08);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-6px);
+            transition: opacity 160ms ease, transform 160ms ease, visibility 160ms;
+            min-width: 180px;
+            pointer-events: none;
+            z-index: 60;
+        }
+        .user-menu .dropdown a { display: block; padding: 10px 12px; color: #0f172a; text-decoration: none; font-size: 14px; }
+        .user-menu:hover .dropdown,
+        .user-menu .dropdown:hover {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+            pointer-events: auto;
         }
 
-        .content-body {
-            padding: 40px;
-            max-width: 1400px;
-            width: 100%;
-            box-sizing: border-box;
-        }
+        .content-body { padding: 28px; max-width: 1400px; width: 100%; box-sizing: border-box; }
 
         /* Kemasan tambahan global untuk jadual (tables) & borang (forms) halaman dalaman */
         .page-inner-card {
@@ -229,6 +267,8 @@ $current_dir  = basename(dirname($_SERVER['PHP_SELF']));
     <ul class="sidebar-menu">
         <li class="<?= ($current_file == 'payment_management.php') ? 'active-page' : '' ?>">
             <a href="/event_saas/admin/payment_management.php">💳 <span>Payments</span></a>
+        </li>
+        <li class="<?= ($current_file == 'admin_notifications.php') ? 'active-page' : '' ?>">
             <a href="/event_saas/admin/admin_notifications.php">🔔 <span>Notifications</span></a>
         </li>
         <?php if ($current_plan == 'premium' || $current_file == 'premium_dashboard.php'): ?>
@@ -242,10 +282,24 @@ $current_dir  = basename(dirname($_SERVER['PHP_SELF']));
 
 <main class="main-workspace">
     <header class="top-navbar">
-        <div class="search-wrapper"><input type="text" placeholder="Search..."></div>
+        <div class="top-navbar-left">
+            <a href="/event_saas/admin/dashboard.php" class="brand">
+                <div class="logo">S</div>
+                <div class="brand-text">SaaSAdmin</div>
+            </a>
+        </div>
+
         <div class="top-navbar-right">
-            <span class="admin-role-badge">Sales Admin</span>
-            <a href="/event_saas/auth/logout.php" class="btn-logout-link">Logout 🚪</a>
+            <a href="/event_saas/admin/admin_notifications.php" class="nav-icon" title="Notifications">🔔</a>
+
+            <div class="user-menu">
+                <div class="user-name"><?= htmlspecialchars(($_SESSION['user_name'] ?? $_SESSION['user_email'] ?? 'Admin')) ?></div>
+                <div class="dropdown">
+                    <a href="/event_saas/admin/company_profile.php">Company Profile</a>
+                    <a href="/event_saas/admin/payment_management.php">Payments</a>
+                    <a href="/event_saas/auth/logout.php">Logout</a>
+                </div>
+            </div>
         </div>
     </header>
     <div class="content-body">

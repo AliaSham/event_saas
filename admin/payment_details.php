@@ -7,6 +7,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'admin') {
     exit;
 }
 
+$company_id = $_SESSION['company_id'];
+
 if (!isset($_GET['id'])) {
     header("Location: payment_management.php");
     exit;
@@ -34,6 +36,7 @@ $paymentQ = mysqli_query($conn, "
     JOIN packages pkg ON b.package_id = pkg.id
     JOIN users u ON p.user_id = u.id
     WHERE p.id = '$payment_id'
+      AND b.company_id = '$company_id'
 ");
 
 if (mysqli_num_rows($paymentQ) == 0) {

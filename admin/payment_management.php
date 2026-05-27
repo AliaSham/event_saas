@@ -7,6 +7,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'admin') {
     exit;
 }
 
+$company_id = $_SESSION['company_id'];
+
 // Handle payment approval
 if (isset($_POST['approve_payment'])) {
     $payment_id = intval($_POST['payment_id']);
@@ -20,16 +22,18 @@ if (isset($_POST['approve_payment'])) {
     $stmt->bind_param("i", $payment_id);
     
     if ($stmt->execute()) {
-        // Update booking status
-        $payQ = mysqli_query($conn, "SELECT booking_id FROM payments WHERE id = '$payment_id'");
-        $payData = mysqli_fetch_assoc($payQ);
-        
-        mysqli_query($conn, "
-            UPDATE bookings
-            SET payment_status = 'Partial', status = 'Confirmed'
-            WHERE id = '{$payData['booking_id']}'
-        ");
-    }
+            // Update booking status only for this company
+            $payQ = mysqli_query($conn, "SELECT b.id AS booking_id FROM payments p JOIN bookings b ON p.booking_id = b.id WHERE p.id = '$payment_id' AND b.company_id = '$company_id'");
+            $payData = mysqli_fetch_assoc($payQ);
+            
+            if ($payData) {
+                mysqli_query($conn, "
+                    UPDATE bookings
+                    SET payment_status = 'Partial', status = 'Confirmed'
+                    WHERE id = '{$payData['booking_id']}'
+                ");
+            }
+        }
 }
 
 // Handle payment rejection
@@ -37,14 +41,17 @@ if (isset($_POST['reject_payment'])) {
     $payment_id = intval($_POST['payment_id']);
     $reject_reason = $_POST['reject_reason'] ?? '';
     
-    $stmt = $conn->prepare("
-        UPDATE payments
-        SET payment_status = 'Failed', notes = ?, updated_at = NOW()
-        WHERE id = ?
-    ");
-    
-    $stmt->bind_param("si", $reject_reason, $payment_id);
-    $stmt->execute();
+    $payQ = mysqli_query($conn, "SELECT p.id FROM payments p JOIN bookings b ON p.booking_id = b.id WHERE p.id = '$payment_id' AND b.company_id = '$company_id'");
+    if (mysqli_num_rows($payQ) > 0) {
+        $stmt = $conn->prepare("
+            UPDATE payments
+            SET payment_status = 'Failed', notes = ?, updated_at = NOW()
+            WHERE id = ?
+        ");
+        
+        $stmt->bind_param("si", $reject_reason, $payment_id);
+        $stmt->execute();
+    }
 }
 
 // Get filter
@@ -67,7 +74,9 @@ $query = "
 ";
 
 if ($filter != 'All') {
-    $query .= " WHERE p.payment_status = '$filter'";
+    $query .= " WHERE b.company_id = '$company_id' AND p.payment_status = '$filter'";
+} else {
+    $query .= " WHERE b.company_id = '$company_id'";
 }
 
 $query .= " ORDER BY p.created_at DESC";
@@ -77,11 +86,13 @@ $paymentsQ = mysqli_query($conn, $query);
 // Get payment statistics
 $statsQ = mysqli_query($conn, "
     SELECT 
-        payment_status,
+        p.payment_status,
         COUNT(*) as count,
-        SUM(deposit_amount) as total_amount
-    FROM payments
-    GROUP BY payment_status
+        SUM(p.deposit_amount) as total_amount
+    FROM payments p
+    JOIN bookings b ON p.booking_id = b.id
+    WHERE b.company_id = '$company_id'
+    GROUP BY p.payment_status
 ");
 
 $stats = [];
@@ -528,3 +539,5 @@ window.onclick = function(event) {
 
 </body>
 </html>
+
+<?php include('footer.php'); ?>

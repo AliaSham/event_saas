@@ -119,3 +119,5 @@ if($companyData['plan'] != 'premium'){
 
 </body>
 </html>
+
+<?php include('footer.php'); ?>
