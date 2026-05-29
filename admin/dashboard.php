@@ -193,74 +193,35 @@ include('header.php');
 
         <div class="admin-grid">
             <div class="admin-card">
-                <div>
-                    <div class="card-icon">🏢</div>
-                    <h3>Company Profile</h3>
-                    <p>Update your company details shown to customers.</p>
-                </div>
+                <div><div class="card-icon">🏢</div><h3>Company Profile</h3><p>Update your company details.</p></div>
                 <a href="company_profile.php" class="btn btn-primary">Open</a>
             </div>
-
             <div class="admin-card">
-                <div>
-                    <div class="card-icon">📂</div>
-                    <h3>Manage Categories</h3>
-                    <p>Create and organize event types.</p>
-                </div>
+                <div><div class="card-icon">📂</div><h3>Manage Categories</h3><p>Create and organize event types.</p></div>
                 <a href="category/index.php" class="btn btn-primary">Open</a>
             </div>
-
             <div class="admin-card">
-                <div>
-                    <div class="card-icon">📖</div>
-                    <h3>Manage Packages</h3>
-                    <p>Create packages with SaaS limits.</p>
-                </div>
+                <div><div class="card-icon">📖</div><h3>Manage Packages</h3><p>Create packages with SaaS limits.</p></div>
                 <a href="package/index.php" class="btn btn-primary">Open</a>
             </div>
-
             <div class="admin-card">
-                <div>
-                    <div class="card-icon">📋</div>
-                    <h3>Manage Bookings</h3>
-                    <p>Review customer bookings and approve or reject requests.</p>
-                </div>
+                <div><div class="card-icon">📋</div><h3>Manage Bookings</h3><p>Review customer bookings.</p></div>
                 <a href="bookings/index.php" class="btn btn-primary">Open</a>
             </div>
-
             <div class="admin-card">
-                <div>
-                    <div class="card-icon">📅</div>
-                    <h3>Manage Calendar</h3>
-                    <p>Close unavailable dates for booking.</p>
-                </div>
+                <div><div class="card-icon">📅</div><h3>Manage Calendar</h3><p>Close unavailable dates for booking.</p></div>
                 <a href="calendar/index.php" class="btn btn-primary">Open</a>
             </div>
-
             <div class="admin-card">
-                <div>
-                    <div class="card-icon">🤝</div>
-                    <h3>Manage Vendors</h3>
-                    <p>Select vendors based on your subscription plan.</p>
-                </div>
+                <div><div class="card-icon">🤝</div><h3>Manage Vendors</h3><p>Select vendors based on your plan.</p></div>
                 <a href="vendors/index.php" class="btn btn-primary">Open</a>
             </div>
-
             <div class="admin-card">
-                <div>
-                    <div class="card-icon">💳</div>
-                    <h3>Manage Payments</h3>
-                    <p>View deposits, payment status, and proof of payments.</p>
-                </div>
+                <div><div class="card-icon">💳</div><h3>Manage Payments</h3><p>View deposits and payment status.</p></div>
                 <a href="payment_management.php" class="btn btn-primary">Open</a>
             </div>
-
             <div class="admin-card">
-                <div>
-                    <div class="card-icon">🔔</div>
-                    <h3>Manage Notifications</h3>
-                    <p>View all payment and booking notifications.</p>
-                </div>
+                <div><div class="card-icon">🔔</div><h3>Manage Notifications</h3><p>View all notifications.</p></div>
                 <a href="admin_notifications.php" class="btn btn-primary">Open</a>
             </div>
         </div>
@@ -289,7 +250,7 @@ include('header.php');
         }
         .stat-card-glass:hover { transform: translateY(-4px); }
         .stat-label { font-size: 11px; color: #526355; text-transform: uppercase; font-weight: 600; letter-spacing: 0.8px; }
-        .dashboard-split-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; align-items: start; }
+        .dashboard-split-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; margin-items: start; margin-bottom: 35px;}
         .panel-glass {
             background: #ffffff !important; border: 1px solid #e2e8f0;
             border-radius: 20px; padding: 28px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.01);
@@ -304,6 +265,14 @@ include('header.php');
             border-radius: 14px; color: #475569; text-decoration: none; font-size: 13px; font-weight: 600; transition: all 0.2s;
         }
         .action-btn-link:hover { background: #f1f5f9; color: #1e293b; transform: translateX(4px); }
+        
+        /* Style baru untuk bawa elemen kerja kawan anda ke sini */
+        .friend-iframe-section {
+            background: #ffffff !important; border: 1px solid #e2e8f0;
+            border-radius: 20px; padding: 25px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+            width: 100%; height: 500px; margin-top: 25px;
+        }
+        
         @media (max-width: 1024px) {
             .stats-container { grid-template-columns: repeat(2, 1fr); }
             .dashboard-split-layout { grid-template-columns: 1fr; }
@@ -329,7 +298,6 @@ include('header.php');
                     <span class="stat-label">Pending Action</span>
                     <div style="font-size: 28px; font-weight: 700; color: #1a202c; margin-top: 5px; line-height: 1;">
                         <span style="color: #b45309;"><?= $total_pending ?></span>
-                        <span style="font-size: 12px; font-weight: 500; color: #718096; margin-left: 3px;">Bookings</span>
                     </div>
                 </div>
                 <div style="font-size: 16px; color: #b45309; background: rgba(217, 119, 6, 0.1); width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
@@ -342,7 +310,6 @@ include('header.php');
                     <span class="stat-label">Active Events</span>
                     <div style="font-size: 28px; font-weight: 700; color: #1a202c; margin-top: 5px; line-height: 1;">
                         <span style="color: #047857;"><?= $total_active ?></span>
-                        <span style="font-size: 12px; font-weight: 500; color: #718096; margin-left: 3px;">Confirmed</span>
                     </div>
                 </div>
                 <div style="font-size: 16px; color: #047857; background: rgba(5, 150, 105, 0.1); width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
@@ -379,88 +346,57 @@ include('header.php');
             <div class="main-analytics-area panel-glass">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
                     <h3 class="panel-title"><i class="fa-solid fa-list-check" style="color: #059669;"></i> Live Booking Activity Pipeline</h3>
-                    <a href="bookings/index.php" style="color: #2563eb; text-decoration: none; font-size: 12px; font-weight: 600;">View All <i class="fa-solid fa-arrow-right" style="font-size: 10px;"></i></a>
                 </div>
                 
                 <div style="display: flex; flex-direction: column; gap: 14px;">
                     <?php if (mysqli_num_rows($recent_bookings) > 0): ?>
                         <?php while ($row = mysqli_fetch_assoc($recent_bookings)): ?>
-                            <div style="display: flex; align-items: center; justify-content: space-between; background: #fafafa; border: 1px solid #f0f0f0; padding: 14px 18px; border-radius: 14px; transition: all 0.2s;" onmouseover="this.style.background='#f1f5f9';" onmouseout="this.style.background='#fafafa';">
+                            <div style="display: flex; align-items: center; justify-content: space-between; background: #fafafa; border: 1px solid #f0f0f0; padding: 14px 18px; border-radius: 14px;">
                                 <div style="display: flex; align-items: center; gap: 15px;">
-                                    <div style="width: 38px; height: 38px; border-radius: 10px; background: #ffffff; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; color: #718096; font-size: 13px;">
+                                    <div style="width: 38px; height: 38px; border-radius: 10px; background: #ffffff; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; color: #718096;">
                                         <i class="fa-solid fa-user"></i>
                                     </div>
                                     <div>
-                                        <h4 style="margin: 0; font-size: 13px; font-weight: 600; color: #1a202c;"><?= htmlspecialchars($row['customer_name'] ?? 'Walk-In / Guest') ?></h4>
-                                        <p style="margin: 3px 0 0 0; font-size: 12px; color: #718096;"><?= htmlspecialchars($row['package_name'] ?? 'Custom Package') ?> • <span style="color: #059669; font-weight: 500;"><?= htmlspecialchars($row['event_date']) ?></span></p>
+                                        <h4 style="margin: 0; font-size: 13px; font-weight: 600; color: #1a202c;"><?= htmlspecialchars($row['customer_name'] ?? 'Guest') ?></h4>
+                                        <p style="margin: 3px 0 0 0; font-size: 12px; color: #718096;"><?= htmlspecialchars($row['package_name'] ?? 'Package') ?> • <span style="color: #059669; font-weight: 500;"><?= htmlspecialchars($row['event_date']) ?></span></p>
                                     </div>
                                 </div>
-                                <div style="display: flex; align-items: center; gap: 15px;">
-                                    <span class="badge-status <?= (strtolower($row['status'] ?? 'pending') == 'pending') ? 'badge-pending' : 'badge-approved' ?>">
-                                        <?= ucfirst($row['status'] ?? 'Pending') ?>
-                                    </span>
-                                    <a href="bookings/index.php" style="color: #cbd5e1;"><i class="fa-solid fa-chevron-right" style="font-size: 12px;"></i></a>
-                                </div>
+                                <span class="badge-status <?= (strtolower($row['status'] ?? 'pending') == 'pending') ? 'badge-pending' : 'badge-approved' ?>">
+                                    <?= ucfirst($row['status'] ?? 'Pending') ?>
+                                </span>
                             </div>
                         <?php endwhile; ?>
                     <?php else: ?>
-                        <div style="text-align: center; padding: 40px 20px;"><h4 style="margin: 0; font-size: 14px; color: #718096;">No Recent Bookings Placed</h4></div>
+                        <div style="text-align: center; padding: 40px 20px;"><h4 style="margin: 0; font-size: 14px; color: #718096;">No Recent Bookings</h4></div>
                     <?php endif; ?>
                 </div>
             </div>
 
             <div class="side-shortcut-area" style="display: flex; flex-direction: column; gap: 25px;">
                 <div class="panel-glass">
-                    <h3 class="panel-title" style="margin-bottom: 20px;"><i class="fa-solid fa-bolt" style="color: #d97706;"></i> System Management</h3>
+                    <h3 class="panel-title" style="margin-bottom: 20px;"><i class="fa-solid fa-bolt" style="color: #d97706;"></i> Shortcuts</h3>
                     <div style="display: flex; flex-direction: column; gap: 12px;">
-                        <a href="bookings/index.php" class="action-btn-link" onmouseover="this.style.borderColor='#059669'" onmouseout="this.style.borderColor='#e2e8f0'">
-                            <span><i class="fa-solid fa-plus-circle" style="margin-right: 6px; color: #059669;"></i> Review Applications</span>
-                            <i class="fa-solid fa-arrow-right-long" style="color: #059669;"></i>
-                        </a>
-                        <a href="calendar/index.php" class="action-btn-link" onmouseover="this.style.borderColor='#ec4899'" onmouseout="this.style.borderColor='#e2e8f0'">
-                            <span><i class="fa-solid fa-calendar-minus" style="margin-right: 6px; color: #ec4899;"></i> Config Locked Dates</span>
-                            <i class="fa-solid fa-arrow-right-long" style="color: #ec4899;"></i>
-                        </a>
-                        <a href="package/index.php" class="action-btn-link" onmouseover="this.style.borderColor='#2563eb'" onmouseout="this.style.borderColor='#e2e8f0'">
-                            <span><i class="fa-solid fa-box-open" style="margin-right: 6px; color: #2563eb;"></i> Inventory Packages (<?= $total_packages ?>)</span>
-                            <i class="fa-solid fa-arrow-right-long" style="color: #2563eb;"></i>
-                        </a>
+                        <a href="bookings/index.php" class="action-btn-link"><span>Review Applications</span><i class="fa-solid fa-arrow-right-long"></i></a>
+                        <a href="calendar/index.php" class="action-btn-link"><span>Config Locked Dates</span><i class="fa-solid fa-arrow-right-long"></i></a>
+                        <a href="package/index.php" class="action-btn-link"><span>Inventory Packages (<?= $total_packages ?>)</span><i class="fa-solid fa-arrow-right-long"></i></a>
                     </div>
-                </div>
-
-                <div class="panel-glass">
-                    <h3 class="panel-title" style="margin-bottom: 20px;"><i class="fa-solid fa-fire" style="color: #ef4444;"></i> Top Demand Packages</h3>
-                    <div style="display: flex; flex-direction: column; gap: 12px;">
-                        <?php if(mysqli_num_rows($top_packages) > 0): ?>
-                            <?php $rank = 1; while($pkg = mysqli_fetch_assoc($top_packages)): ?>
-                                <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <span style="font-weight: 700; color: #64748b; font-size: 13px;">#<?= $rank++ ?></span>
-                                        <div>
-                                            <div style="font-size: 13px; font-weight: 600; color: #1a202c;">Package ID: #<?= $pkg['package_id'] ?></div>
-                                            <div style="font-size: 11px; color: #94a3b8;">SaaS Managed Item</div>
-                                        </div>
-                                    </div>
-                                    <span style="background: #fee2e2; color: #ef4444; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 8px;"><?= $pkg['total_sales'] ?> Orders</span>
-                                </div>
-                            <?php endwhile; ?>
-                        <?php else: ?>
-                            <div style="font-size: 12px; color: #94a3b8; text-align: center; padding: 10px 0;">No purchase records found yet.</div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-
-                <div class="panel-glass" style="border: 1px solid #a7f3d0; background: linear-gradient(135deg, #f0fdf4, #ffffff) !important; padding: 22px;">
-                    <h3 class="panel-title" style="color: #047857; margin-bottom: 6px;"><i class="fa-solid fa-chart-line"></i> Premium Insights</h3>
-                    <p style="color: #4a5568; font-size: 12px; margin: 0 0 15px 0; line-height: 1.5;">SaaS Business Intelligence mode is active.</p>
-                    <a href="premium_dashboard.php" style="background: linear-gradient(135deg, #059669, #10b981); color: #ffffff; padding: 10px 15px; border-radius: 10px; text-decoration: none; font-size: 12px; font-weight: 600; display: inline-block; width: 100%; text-align: center; box-sizing: border-box;">View Charts</a>
                 </div>
             </div>
         </div>
-    </div>
+
+        <div class="friend-iframe-section">
+            <h3 class="panel-title" style="margin-bottom: 15px;">
+                <i class="fa-solid fa-chart-pie" style="color: #2563eb;"></i> Live Business Intelligence Analytics
+            </h3>
+            <div style="width: 100%; height: calc(100% - 40px); border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0;">
+                <iframe 
+                    src="https://datastudio.google.com/embed/reporting/107ea33c-d1cd-4995-97f7-15cf16a5e891/page/qUPyF" 
+                    style="width: 100%; height: 100%; border: none;"
+                    allowfullscreen>
+                </iframe>
+            </div>
+        </div>
+        </div>
 <?php endif; ?>
 
-<?php 
-// Panggil footer di bahagian paling bawah sekali
-include('footer.php'); 
-?>
+<?php include('footer.php'); ?>
