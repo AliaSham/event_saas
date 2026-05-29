@@ -1,12 +1,37 @@
 <?php
-// 1. Semakan keselamatan asas
+// 1. Semakan keselamatan asas & pengaktifan sesi
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Memastikan fail sambungan database dimuatkan dengan betul
+// Jika fail ini diletakkan di dalam subfolder yang dalam, pastikan path ini tepat
+if (file_exists('../config/db.php')) {
+    include('../config/db.php');
+} elseif (file_exists('../../config/db.php')) {
+    include('../../config/db.php');
+} else {
+    // Alternatif jika diletakkan secara mutlak dari root folder XAMPP
+    include($_SERVER['DOCUMENT_ROOT'] . '/event_saas/config/db.php');
+}
+
 if (!isset($_SESSION['user_id'])) {
     header("Location: /event_saas/auth/login.php");
     exit;
 }
 
-// Ambil data plan secara selamat sekiranya fail dalaman lupa pas pada header
-$current_plan = isset($plan) ? strtolower($plan) : 'standard';
+// Ambil company_id dari session secara selamat
+$company_id = $_SESSION['company_id'] ?? null;
+$current_plan = 'standard'; // Tetapkan nilai sandaran asal
+
+// Buat semakan pelan secara langsung daripada database supaya kalis ralat di semua page
+if ($company_id && isset($conn)) {
+    $planQuery = mysqli_query($conn, "SELECT plan FROM companies WHERE id = '$company_id'");
+    if ($planQuery && mysqli_num_rows($planQuery) > 0) {
+        $planData = mysqli_fetch_assoc($planQuery);
+        $current_plan = strtolower($planData['plan'] ?? 'standard');
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -303,6 +328,7 @@ $current_dir  = basename(dirname($_SERVER['PHP_SELF']));
         <li class="<?= ($current_file == 'admin_notifications.php') ? 'active-page' : '' ?>">
             <a href="/event_saas/admin/admin_notifications.php">🔔 <span>Notifications</span></a>
         </li>
+        
         <?php if ($current_plan == 'premium' || $current_file == 'premium_dashboard.php'): ?>
         <li class="<?= ($current_file == 'premium_dashboard.php') ? 'active-page' : '' ?>">
             <a href="/event_saas/admin/premium_dashboard.php">📈 <span>Premium Intel</span></a>
