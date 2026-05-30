@@ -18,32 +18,47 @@ if ($company_id) {
     }
 }
 
-if (isset($_POST['mark_all_read'])) {
-    mysqli_query($conn, "UPDATE admin_notifications SET is_read = 1");
+/* ========================================================
+   LOGIK TINDAKAN (Hanya beri kesan kepada Syarikat Sendiri)
+   ======================================================== */
+
+// 1. Mark All Read (Hanya untuk syarikat ini)
+if (isset($_POST['mark_all_read']) && $company_id) {
+    mysqli_query($conn, "UPDATE admin_notifications SET is_read = 1 WHERE company_id = '$company_id'");
 }
 
-if (isset($_POST['delete_notification'])) {
+// 2. Delete Single Notification (Pastikan milik syarikat ini untuk keselamatan)
+if (isset($_POST['delete_notification']) && $company_id) {
     $notification_id = intval($_POST['notification_id']);
-    mysqli_query($conn, "DELETE FROM admin_notifications WHERE id='$notification_id'");
+    mysqli_query($conn, "DELETE FROM admin_notifications WHERE id='$notification_id' AND company_id = '$company_id'");
 }
 
-if (isset($_POST['clear_all'])) {
-    mysqli_query($conn, "DELETE FROM admin_notifications");
+// 3. Clear All (Hanya padam milik syarikat ini)
+if (isset($_POST['clear_all']) && $company_id) {
+    mysqli_query($conn, "DELETE FROM admin_notifications WHERE company_id = '$company_id'");
 }
 
+/* ========================================================
+   QUERY DATA (Ditapis dengan WHERE company_id)
+   ======================================================== */
+
+// Ambil senarai notifikasi khas untuk syarikat ini sahaja
 $notificationsQ = mysqli_query($conn, "
     SELECT * FROM admin_notifications 
+    WHERE company_id = '$company_id'
     ORDER BY created_at DESC 
     LIMIT 100
 ");
 
+// Kira jumlah unread khas untuk syarikat ini
 $unreadCount = mysqli_fetch_assoc(mysqli_query($conn, "
-    SELECT COUNT(*) AS count FROM admin_notifications WHERE is_read = 0
-"))['count'];
+    SELECT COUNT(*) AS count FROM admin_notifications WHERE is_read = 0 AND company_id = '$company_id'
+"))['count'] ?? 0;
 
+// Kira jumlah keseluruhan khas untuk syarikat ini
 $totalCount = mysqli_fetch_assoc(mysqli_query($conn, "
-    SELECT COUNT(*) AS count FROM admin_notifications
-"))['count'];
+    SELECT COUNT(*) AS count FROM admin_notifications WHERE company_id = '$company_id'
+"))['count'] ?? 0;
 ?>
 
 <!DOCTYPE html>

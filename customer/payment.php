@@ -507,14 +507,12 @@ while ($v = mysqli_fetch_assoc($vendorQ)) {
                     💳 Proceed to Payment (RM <?= number_format($deposit_amount, 2) ?>)
                 </button>
 
-            </form>
+           </form>
         </div>
 
     </div>
 
 </div>
-
-<?php include('header.php'); /* Close HTML */ ?>
 
 </body>
 </html>
