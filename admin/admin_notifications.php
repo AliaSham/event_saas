@@ -204,6 +204,25 @@ body {
     text-decoration: none;
 }
 
+/* BADGE MERAH UNTUK BILANGAN NOTIFIKASI */
+.notification-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #ef4444;
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+    box-shadow: 0 2px 5px rgba(239, 68, 68, 0.4);
+}
+
 .user-name {
     font-size: 14px;
     font-weight: 800;
@@ -236,53 +255,6 @@ body {
     height: 320px;
     border-radius: 50%;
     background: rgba(255,255,255,.12);
-}
-
-.hero-content {
-    position: relative;
-    z-index: 2;
-    display: flex;
-    justify-content: space-between;
-    gap: 25px;
-    align-items: center;
-}
-
-.notification-hero h1 {
-    font-size: 40px;
-    line-height: 1.1;
-    margin: 0 0 12px;
-    font-weight: 900;
-}
-
-.notification-hero p {
-    margin: 0;
-    color: #dcfce7;
-    font-size: 15px;
-}
-
-.hero-stats {
-    display: flex;
-    gap: 16px;
-}
-
-.stat-card {
-    min-width: 145px;
-    padding: 22px;
-    border-radius: 24px;
-    background: rgba(255,255,255,.16);
-    border: 1px solid rgba(255,255,255,.25);
-    backdrop-filter: blur(12px);
-}
-
-.stat-card h2 {
-    margin: 0;
-    font-size: 36px;
-    font-weight: 900;
-}
-
-.stat-card span {
-    font-size: 12px;
-    color: #dcfce7;
 }
 
 /* CONTROL PANEL */
@@ -545,7 +517,12 @@ $current_dir  = basename(dirname($_SERVER['PHP_SELF']));
     </a>
 
     <div class="top-navbar-right">
-        <a href="/event_saas/admin/admin_notifications.php" class="nav-icon">🔔</a>
+        <a href="/event_saas/admin/admin_notifications.php" class="nav-icon" style="position: relative;">
+            🔔
+            <?php if ($unreadCount > 0): ?>
+                <span class="notification-badge"><?= $unreadCount ?></span>
+            <?php endif; ?>
+        </a>
         <div class="user-name"><?= htmlspecialchars($_SESSION['user_name'] ?? 'Admin') ?></div>
     </div>
 </header>
