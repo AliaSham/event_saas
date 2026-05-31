@@ -9,7 +9,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'vendor') {
 
 $vendor_id = $_SESSION['user_id'];
 
-/* CHECK VENDOR APPROVAL */
 $userQ = mysqli_query($conn, "
     SELECT * FROM users 
     WHERE id='$vendor_id' AND role='vendor'
@@ -22,19 +21,16 @@ if (!$user || $user['approval_status'] != 'active') {
     exit;
 }
 
-/* CLOSE DATE */
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'close') {
 
     $unavailable_date = $_POST['unavailable_date'];
     $reason = mysqli_real_escape_string($conn, $_POST['reason']);
 
-    // BLOCK PAST DATE
     if (strtotime($unavailable_date) < strtotime(date('Y-m-d'))) {
         echo "past_date";
         exit;
     }
 
-    // CHECK EXISTING BOOKING
     $bookingCheck = mysqli_query($conn, "
         SELECT *
         FROM booking_vendors bv
@@ -56,7 +52,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
     ");
 
     if (mysqli_num_rows($check) == 0) {
-
         mysqli_query($conn, "
             INSERT INTO vendor_calendar
             (vendor_user_id, unavailable_date, reason)
@@ -69,18 +64,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
     exit;
 }
 
-/* OPEN DATE AGAIN */
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'open') {
 
     $unavailable_date = $_POST['unavailable_date'];
 
-    // BLOCK PAST DATE
     if (strtotime($unavailable_date) < strtotime(date('Y-m-d'))) {
         echo "past_date";
         exit;
     }
 
-    // CHECK EXISTING BOOKING
     $bookingCheck = mysqli_query($conn, "
         SELECT *
         FROM booking_vendors bv
@@ -105,10 +97,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
     exit;
 }
 
-/* FETCH CALENDAR EVENTS */
 $calendarEvents = [];
 
-/* 1. VENDOR UNAVAILABLE DATES - RED */
+$unavailableCount = 0;
+$pendingCount = 0;
+$confirmedCount = 0;
+
 $unavailableQ = mysqli_query($conn, "
     SELECT * FROM vendor_calendar
     WHERE vendor_user_id='$vendor_id'
@@ -117,11 +111,13 @@ $unavailableQ = mysqli_query($conn, "
 
 while ($row = mysqli_fetch_assoc($unavailableQ)) {
 
+    $unavailableCount++;
+
     $calendarEvents[] = [
         'title' => 'Unavailable',
         'start' => $row['unavailable_date'],
-        'backgroundColor' => '#ff4d4f',
-        'borderColor' => '#ff4d4f',
+        'backgroundColor' => '#ef4444',
+        'borderColor' => '#ef4444',
         'textColor' => '#ffffff',
         'extendedProps' => [
             'type' => 'unavailable',
@@ -130,7 +126,6 @@ while ($row = mysqli_fetch_assoc($unavailableQ)) {
     ];
 }
 
-/* 2. PENDING / CONFIRMED BOOKINGS */
 $bookingQ = mysqli_query($conn, "
     SELECT 
         b.id AS booking_id,
@@ -153,14 +148,13 @@ $bookingQ = mysqli_query($conn, "
 while ($row = mysqli_fetch_assoc($bookingQ)) {
 
     if ($row['status'] == 'Pending') {
-
+        $pendingCount++;
         $color = '#facc15';
-        $textColor = '#000000';
+        $textColor = '#0f172a';
         $title = 'Pending Booking';
         $type = 'pending';
-
     } else {
-
+        $confirmedCount++;
         $color = '#22c55e';
         $textColor = '#ffffff';
         $title = 'Confirmed Booking';
@@ -190,41 +184,301 @@ while ($row = mysqli_fetch_assoc($bookingQ)) {
 <head>
     <title>Vendor Calendar</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/event_saas/assets/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background: #f4f7fb;
+            color: #0f172a;
+        }
+
+        .calendar-page {
+            padding: 38px 55px;
+        }
+
+        .calendar-hero {
+            background: linear-gradient(135deg, #0f766e, #14b8a6, #2563eb);
+            color: white;
+            padding: 35px 40px;
+            border-radius: 28px;
+            box-shadow: 0 18px 45px rgba(15,118,110,0.25);
+            margin-bottom: 28px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .calendar-hero::after {
+            content: "";
+            position: absolute;
+            right: -70px;
+            top: -80px;
+            width: 260px;
+            height: 260px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+        }
+
+        .calendar-hero h1 {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 800;
+        }
+
+        .calendar-hero p {
+            margin: 8px 0 0;
+            font-size: 14px;
+            opacity: .95;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 22px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 22px;
+            padding: 24px;
+            box-shadow: 0 14px 35px rgba(15,23,42,0.07);
+            border: 1px solid #e5e7eb;
+        }
+
+        .stat-card span {
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .stat-card h2 {
+            margin: 10px 0 0;
+            font-size: 28px;
+            font-weight: 800;
+        }
+
+        .layout-grid {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 28px;
+            align-items: start;
+        }
+
+        .calendar-card {
+            background: white;
+            border-radius: 28px;
+            padding: 26px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 16px 40px rgba(15,23,42,0.08);
+        }
+
+        #calendar {
+            width: 100%;
+        }
+
+        .side-card {
+            background: white;
+            border-radius: 28px;
+            padding: 26px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 16px 40px rgba(15,23,42,0.08);
+        }
+
+        .side-card h3 {
+            margin: 0;
+            font-size: 21px;
+        }
+
+        .side-card p {
+            margin: 8px 0 20px;
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 13px 0;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .legend-item:last-child {
+            border-bottom: none;
+        }
+
+        .legend-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 5px;
+        }
+
+        .red {
+            background: #ef4444;
+        }
+
+        .yellow {
+            background: #facc15;
+        }
+
+        .green {
+            background: #22c55e;
+        }
+
+        .tips-box {
+            margin-top: 22px;
+            padding: 18px;
+            border-radius: 20px;
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+        }
+
+        .tips-box strong {
+            font-size: 14px;
+        }
+
+        .tips-box ul {
+            padding-left: 18px;
+            margin: 12px 0 0;
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.8;
+        }
+
+        .fc {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .fc .fc-toolbar-title {
+            font-size: 23px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .fc .fc-button-primary {
+            background: #2563eb;
+            border: none;
+            border-radius: 12px;
+            padding: 9px 13px;
+            font-size: 12px;
+            font-weight: 700;
+            box-shadow: none;
+        }
+
+        .fc .fc-button-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .fc .fc-daygrid-day {
+            transition: .2s;
+        }
+
+        .fc .fc-daygrid-day:hover {
+            background: #f8fafc;
+            cursor: pointer;
+        }
+
+        .fc .fc-day-today {
+            background: #ecfeff !important;
+        }
+
+        .fc-event {
+            border-radius: 10px !important;
+            padding: 3px 6px !important;
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            border: none !important;
+        }
+
+        @media(max-width: 1100px) {
+            .layout-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .calendar-page {
+                padding: 25px;
+            }
+        }
+    </style>
 </head>
 
 <body>
 
 <?php include('../header.php'); ?>
 
-<div class="container">
+<div class="calendar-page">
 
-    <div class="page-header">
-        <div>
-            <h2 class="page-title">Vendor Calendar</h2>
-            <p class="muted">Manage unavailable dates and view booking status</p>
+    <div class="calendar-hero">
+        <h1>Vendor Calendar</h1>
+        <p>Manage unavailable dates, monitor booking status and keep your event schedule organized.</p>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span>Unavailable Dates</span>
+            <h2><?= $unavailableCount ?></h2>
+        </div>
+
+        <div class="stat-card">
+            <span>Pending Bookings</span>
+            <h2><?= $pendingCount ?></h2>
+        </div>
+
+        <div class="stat-card">
+            <span>Confirmed Bookings</span>
+            <h2><?= $confirmedCount ?></h2>
         </div>
     </div>
 
-    <div class="calendar-wrapper">
+    <div class="layout-grid">
 
-        <div id="calendar"></div>
+        <div class="calendar-card">
+            <div id="calendar"></div>
+        </div>
 
-        <div class="calendar-info bottom-info">
+        <div class="side-card">
+            <h3>Calendar Guide</h3>
+            <p>Click any available future date to close it. Click an unavailable date again to reopen it.</p>
 
-            <span class="legend-box closed-box"></span>
-            <span>Unavailable</span>
+            <div class="legend-item">
+                <span class="legend-dot red"></span>
+                Unavailable Date
+            </div>
 
-            <span class="legend-box pending-box"></span>
-            <span>Pending Booking</span>
+            <div class="legend-item">
+                <span class="legend-dot yellow"></span>
+                Pending Booking
+            </div>
 
-            <span class="legend-box confirmed-box"></span>
-            <span>Confirmed Booking</span>
+            <div class="legend-item">
+                <span class="legend-dot green"></span>
+                Confirmed Booking
+            </div>
 
+            <div class="tips-box">
+                <strong>Quick Tips</strong>
+                <ul>
+                    <li>Past dates cannot be edited.</li>
+                    <li>Booked dates cannot be manually opened or closed.</li>
+                    <li>Click booking events to view customer details.</li>
+                </ul>
+            </div>
         </div>
 
     </div>
@@ -235,13 +489,12 @@ while ($row = mysqli_fetch_assoc($bookingQ)) {
 document.addEventListener('DOMContentLoaded', function() {
 
     const calendarEl = document.getElementById('calendar');
-
     let calendarEvents = <?= json_encode($calendarEvents) ?>;
 
     const calendar = new FullCalendar.Calendar(calendarEl, {
 
         initialView: 'dayGridMonth',
-        contentHeight: 500,
+        contentHeight: 640,
 
         headerToolbar: {
             left: 'prev,next today',
@@ -255,7 +508,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const eventType = info.event.extendedProps.type;
 
-            // BOOKING DETAILS
             if (eventType === "pending" || eventType === "confirmed") {
 
                 let details =
@@ -270,7 +522,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert(details);
             }
 
-            // UNAVAILABLE DETAILS
             if (eventType === "unavailable") {
 
                 alert(
@@ -284,15 +535,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const clickedDate = info.dateStr;
 
-            // TODAY DATE
             const today = new Date();
             today.setHours(0,0,0,0);
 
-            // CLICKED DATE
             const selectedDate = new Date(clickedDate);
             selectedDate.setHours(0,0,0,0);
 
-            // BLOCK PAST DATES
             if (selectedDate < today) {
                 alert("You cannot modify past dates.");
                 return;
@@ -311,17 +559,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 return event.extendedProps.type === "unavailable";
             });
 
-            // BLOCK IF HAVE BOOKING
             if (hasBooking) {
-
-                alert(
-                    "This date has a booking. You cannot manually open or close this date."
-                );
-
+                alert("This date has a booking. You cannot manually open or close this date.");
                 return;
             }
 
-            // OPEN DATE AGAIN
             if (isUnavailable) {
 
                 const confirmOpen = confirm(
@@ -331,31 +573,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (confirmOpen) {
 
                     fetch("index.php", {
-
                         method: "POST",
-
                         headers: {
                             "Content-Type": "application/x-www-form-urlencoded"
                         },
-
                         body:
                             "action=open&unavailable_date=" +
                             encodeURIComponent(clickedDate)
-
                     })
                     .then(response => response.text())
                     .then(data => {
 
                         if (data === "past_date") {
-
                             alert("You cannot modify past dates.");
-
                         } else if (data === "booking_exists") {
-
                             alert("This date already has a booking.");
-
                         } else {
-
                             location.reload();
                         }
                     });
@@ -363,41 +596,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
             } else {
 
-                // CLOSE DATE
-                const reason = prompt(
-                    "Enter reason why you are unavailable:"
-                );
+                const reason = prompt("Enter reason why you are unavailable:");
 
                 if (reason !== null && reason.trim() !== "") {
 
                     fetch("index.php", {
-
                         method: "POST",
-
                         headers: {
                             "Content-Type": "application/x-www-form-urlencoded"
                         },
-
                         body:
                             "action=close&unavailable_date=" +
                             encodeURIComponent(clickedDate) +
                             "&reason=" +
                             encodeURIComponent(reason)
-
                     })
                     .then(response => response.text())
                     .then(data => {
 
                         if (data === "past_date") {
-
                             alert("You cannot modify past dates.");
-
                         } else if (data === "booking_exists") {
-
                             alert("This date already has a booking.");
-
                         } else {
-
                             location.reload();
                         }
                     });
