@@ -9,7 +9,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'customer') {
 
 $user_id = $_SESSION['user_id'];
 
-/* GET CUSTOMER BOOKINGS */
 $bookings = mysqli_query($conn, "
     SELECT 
         b.*,
@@ -26,81 +25,371 @@ $bookings = mysqli_query($conn, "
 ");
 
 $message = isset($_GET['msg']) ? $_GET['msg'] : '';
+$totalBookings = mysqli_num_rows($bookings);
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
-    <title>My Bookings</title>
+<title>My Bookings</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/event_saas/assets/css/style.css">
-    <style>
-        .payment-status-box {
-            background: #f0f7ff;
-            border-left: 4px solid #2196f3;
-            padding: 12px;
-            margin: 15px 0;
-            border-radius: 4px;
-            font-size: 13px;
-        }
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/event_saas/assets/css/style.css">
 
-        .payment-status-box.pending {
-            background: #fff3cd;
-            border-color: #ffc107;
-        }
+<style>
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background:
+        radial-gradient(circle at top left, rgba(37,99,235,.16), transparent 35%),
+        radial-gradient(circle at bottom right, rgba(14,165,233,.14), transparent 35%),
+        #f4f7fb;
+    color: #0f172a;
+}
 
-        .payment-status-box.completed {
-            background: #e8f5e9;
-            border-color: #28a745;
-        }
+.container {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 38px 24px 60px;
+}
 
-        .payment-action-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-            flex-wrap: wrap;
-        }
+.booking-hero {
+    background: linear-gradient(135deg, #0f172a, #1d4ed8, #38bdf8);
+    color: white;
+    border-radius: 30px;
+    padding: 42px;
+    margin-bottom: 28px;
+    box-shadow: 0 25px 55px rgba(37,99,235,.25);
+}
 
-        .payment-action-buttons a,
-        .payment-action-buttons button {
-            padding: 8px 15px;
-            border-radius: 4px;
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 500;
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
+.booking-hero span {
+    display: inline-block;
+    background: rgba(255,255,255,.16);
+    border: 1px solid rgba(255,255,255,.24);
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    margin-bottom: 16px;
+}
 
-        .btn-pay-now {
-            background: #ff6b6b;
-            color: white;
-        }
+.booking-hero h1 {
+    margin: 0 0 10px;
+    font-size: 38px;
+}
 
-        .btn-pay-now:hover {
-            background: #ee5a52;
-        }
+.booking-hero p {
+    margin: 0;
+    opacity: .9;
+}
 
-        .btn-view-payment {
-            background: #6c757d;
-            color: white;
-        }
+.summary-card {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin-bottom: 30px;
+}
 
-        .btn-view-payment:hover {
-            background: #5a6268;
-        }
+.summary-box {
+    background: white;
+    border-radius: 22px;
+    padding: 20px;
+    box-shadow: 0 16px 38px rgba(15,23,42,.08);
+    border: 1px solid #e2e8f0;
+}
 
-        .alert-message {
-            padding: 12px 15px;
-            margin-bottom: 20px;
-            border-radius: 6px;
-            background: #e8f5e9;
-            border-left: 4px solid #28a745;
-            color: #2e7d32;
-        }
-    </style>
+.summary-box small {
+    color: #64748b;
+}
+
+.summary-box h3 {
+    margin: 8px 0 0;
+    font-size: 28px;
+}
+
+.alert-message {
+    padding: 15px 18px;
+    margin-bottom: 24px;
+    border-radius: 16px;
+    background: #ecfdf5;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+    font-weight: 600;
+}
+
+.empty-state {
+    min-height: 420px;
+    background: white;
+    border-radius: 30px;
+    box-shadow: 0 20px 45px rgba(15,23,42,.08);
+    border: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 45px;
+}
+
+.empty-icon {
+    width: 86px;
+    height: 86px;
+    margin: 0 auto 18px;
+    border-radius: 28px;
+    background: linear-gradient(135deg, #dbeafe, #e0f2fe);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 42px;
+}
+
+.empty-state h3 {
+    margin: 0 0 8px;
+    font-size: 26px;
+}
+
+.empty-state p {
+    margin: 0 0 20px;
+    color: #64748b;
+}
+
+.btn-primary {
+    display: inline-block;
+    padding: 13px 22px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #2563eb, #0ea5e9);
+    color: white;
+    text-decoration: none;
+    font-weight: 700;
+    box-shadow: 0 12px 25px rgba(37,99,235,.25);
+}
+
+.booking-list {
+    display: grid;
+    gap: 26px;
+}
+
+.booking-card {
+    background: rgba(255,255,255,.96);
+    border: 1px solid #e2e8f0;
+    border-radius: 28px;
+    overflow: hidden;
+    box-shadow: 0 20px 45px rgba(15,23,42,.09);
+}
+
+.booking-card-header {
+    padding: 24px 28px;
+    background: linear-gradient(135deg, #f8fafc, #eff6ff);
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    align-items: center;
+}
+
+.booking-card-header h3 {
+    margin: 0;
+    font-size: 23px;
+}
+
+.muted {
+    margin: 5px 0 0;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.status-badge {
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.status-pending,
+.status-payment-pending {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.status-approved,
+.status-confirmed {
+    background: #ecfdf5;
+    color: #15803d;
+}
+
+.status-cancelled {
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
+.status-completed {
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.booking-content {
+    padding: 26px 28px 30px;
+}
+
+.booking-info-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 22px;
+}
+
+.info-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 16px;
+}
+
+.info-box small {
+    color: #64748b;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.info-box strong {
+    font-size: 15px;
+}
+
+.booking-section {
+    margin-top: 20px;
+    padding: 20px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+}
+
+.booking-section h4 {
+    margin: 0 0 9px;
+    font-size: 16px;
+}
+
+.booking-section p {
+    margin: 0;
+    color: #475569;
+    line-height: 1.7;
+    font-size: 14px;
+}
+
+.payment-status-box {
+    margin-top: 22px;
+    padding: 20px;
+    border-radius: 22px;
+    border: 1px solid;
+}
+
+.payment-status-box.pending {
+    background: #fffbeb;
+    border-color: #fde68a;
+}
+
+.payment-status-box.completed {
+    background: #ecfdf5;
+    border-color: #bbf7d0;
+}
+
+.payment-title {
+    font-size: 17px;
+    font-weight: 800;
+    margin-bottom: 10px;
+}
+
+.payment-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    margin-top: 8px;
+    font-size: 14px;
+}
+
+.payment-action-buttons {
+    margin-top: 16px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.btn-pay-now,
+.btn-view-payment {
+    display: inline-block;
+    padding: 12px 18px;
+    border-radius: 14px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.btn-pay-now {
+    background: linear-gradient(135deg, #ef4444, #f97316);
+    color: white;
+}
+
+.btn-view-payment {
+    background: #0f172a;
+    color: white;
+}
+
+.addon-list {
+    display: grid;
+    gap: 12px;
+}
+
+.addon-item {
+    padding: 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    align-items: center;
+}
+
+.addon-item strong {
+    color: #0f172a;
+}
+
+.addon-item p {
+    margin: 4px 0 0;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.addon-price {
+    font-weight: 800;
+    color: #2563eb;
+}
+
+@media(max-width: 900px) {
+    .summary-card,
+    .booking-info-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media(max-width: 600px) {
+    .booking-hero {
+        padding: 30px 24px;
+    }
+
+    .booking-hero h1 {
+        font-size: 30px;
+    }
+
+    .summary-card,
+    .booking-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .booking-card-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+</style>
 </head>
 
 <body>
@@ -109,10 +398,24 @@ $message = isset($_GET['msg']) ? $_GET['msg'] : '';
 
 <div class="container">
 
-    <div class="page-header">
-        <div>
-            <h2 class="page-title">My Bookings</h2>
-            <p class="muted">View your event booking status and selected add-ons</p>
+    <div class="booking-hero">
+        <span>📋 Customer Booking Centre</span>
+        <h1>My Bookings</h1>
+        <p>View your event booking status, package details, selected vendors and payment progress in one place.</p>
+    </div>
+
+    <div class="summary-card">
+        <div class="summary-box">
+            <small>Total Bookings</small>
+            <h3><?= $totalBookings ?></h3>
+        </div>
+        <div class="summary-box">
+            <small>Payment Tracking</small>
+            <h3>Ready</h3>
+        </div>
+        <div class="summary-box">
+            <small>Booking Status</small>
+            <h3>Live</h3>
         </div>
     </div>
 
@@ -122,22 +425,24 @@ $message = isset($_GET['msg']) ? $_GET['msg'] : '';
         </div>
     <?php } ?>
 
-    <?php if (mysqli_num_rows($bookings) == 0) { ?>
+    <?php if ($totalBookings == 0) { ?>
         <div class="empty-state">
-            <h3>No bookings yet</h3>
-            <p>You have not made any booking yet.</p>
-            <a href="dashboard.php" class="btn btn-primary">Browse Companies</a>
+            <div>
+                <div class="empty-icon">🗓️</div>
+                <h3>No bookings yet</h3>
+                <p>You have not made any booking yet. Start by browsing available event companies.</p>
+                <a href="dashboard.php" class="btn-primary">Browse Companies</a>
+            </div>
         </div>
     <?php } ?>
 
     <div class="booking-list">
 
-        <?php while($booking = mysqli_fetch_assoc($bookings)) { ?>
-
-            <?php
+        <?php 
+        mysqli_data_seek($bookings, 0);
+        while($booking = mysqli_fetch_assoc($bookings)) { 
             $booking_id = $booking['id'];
 
-            /* GET ADD-ON / VENDOR FOR THIS BOOKING */
             $vendorQ = mysqli_query($conn, "
                 SELECT 
                     bv.price,
@@ -149,7 +454,6 @@ $message = isset($_GET['msg']) ? $_GET['msg'] : '';
                 WHERE bv.booking_id = '$booking_id'
             ");
 
-            /* GET PAYMENT STATUS */
             $paymentQ = mysqli_query($conn, "
                 SELECT * FROM payments
                 WHERE booking_id = '$booking_id'
@@ -162,86 +466,92 @@ $message = isset($_GET['msg']) ? $_GET['msg'] : '';
             if (mysqli_num_rows($paymentQ) > 0) {
                 $payment = mysqli_fetch_assoc($paymentQ);
             }
-            ?>
+        ?>
 
-            <div class="booking-card">
+        <div class="booking-card">
 
-                <div class="booking-card-header">
-
-                    <div>
-                        <h3><?= $booking['company_name'] ?></h3>
-                        <p class="muted">
-                            Booking ID: #<?= $booking['id'] ?>
-                        </p>
-                    </div>
-
-                    <span class="status-badge status-<?= strtolower($booking['status']) ?>">
-                        <?= $booking['status'] ?>
-                    </span>
-
+            <div class="booking-card-header">
+                <div>
+                    <h3><?= htmlspecialchars($booking['company_name']) ?></h3>
+                    <p class="muted">Booking ID: #<?= $booking['id'] ?></p>
                 </div>
+
+                <span class="status-badge status-<?= strtolower(str_replace(' ', '-', $booking['status'])) ?>">
+                    <?= htmlspecialchars($booking['status']) ?>
+                </span>
+            </div>
+
+            <div class="booking-content">
 
                 <div class="booking-info-grid">
-
-                    <div>
-                        <p><strong>Event Date:</strong></p>
-                        <p><?= $booking['event_date'] ?></p>
+                    <div class="info-box">
+                        <small>Event Date</small>
+                        <strong><?= htmlspecialchars($booking['event_date']) ?></strong>
                     </div>
 
-                    <div>
-                        <p><strong>Package:</strong></p>
-                        <p><?= $booking['package_name'] ?></p>
+                    <div class="info-box">
+                        <small>Package</small>
+                        <strong><?= htmlspecialchars($booking['package_name']) ?></strong>
                     </div>
 
-                    <div>
-                        <p><strong>Pax:</strong></p>
-                        <p><?= $booking['pax'] ?> pax</p>
+                    <div class="info-box">
+                        <small>Pax</small>
+                        <strong><?= htmlspecialchars($booking['pax']) ?> pax</strong>
                     </div>
 
-                    <div>
-                        <p><strong>Total Price:</strong></p>
-                        <p>RM <?= number_format($booking['total_price'], 2) ?></p>
+                    <div class="info-box">
+                        <small>Total Price</small>
+                        <strong>RM <?= number_format($booking['total_price'], 2) ?></strong>
                     </div>
-
                 </div>
 
                 <div class="booking-section">
-                    <p><strong>Package Description:</strong></p>
-                    <p><?= $booking['package_description'] ?></p>
+                    <h4>Package Description</h4>
+                    <p><?= htmlspecialchars($booking['package_description']) ?></p>
                 </div>
 
                 <div class="booking-section">
-                    <p><strong>Menu:</strong></p>
-                    <p><?= $booking['menu'] ?></p>
+                    <h4>Menu</h4>
+                    <p><?= htmlspecialchars($booking['menu']) ?></p>
                 </div>
 
-                <!-- Payment Status Section -->
                 <?php if ($booking['status'] == 'Payment Pending') { ?>
                     <div class="payment-status-box pending">
-                        <strong>⏳ Payment Pending</strong>
-                        <p style="margin: 5px 0 0 0;">Deposit (10%): <strong>RM <?= number_format($deposit_amount, 2) ?></strong></p>
-                        <p style="margin: 3px 0 0 0; font-size: 12px; color: #666;">Please complete the payment to confirm your booking.</p>
+                        <div class="payment-title">⏳ Payment Pending</div>
+                        <div class="payment-row">
+                            <span>Deposit Required</span>
+                            <strong>RM <?= number_format($deposit_amount, 2) ?></strong>
+                        </div>
+                        <p style="margin-top:10px;color:#92400e;font-size:13px;">
+                            Please complete the 10% deposit payment to confirm your booking.
+                        </p>
                         <div class="payment-action-buttons">
-                            <a href="payment.php?booking_id=<?= $booking_id ?>" class="btn-pay-now">
-                                💳 Pay Now
-                            </a>
+                            <a href="payment.php?booking_id=<?= $booking_id ?>" class="btn-pay-now">💳 Pay Now</a>
                         </div>
                     </div>
                 <?php } elseif ($booking['payment_status'] == 'Partial' || $booking['payment_status'] == 'Paid') { ?>
                     <div class="payment-status-box completed">
                         <?php if ($booking['payment_status'] == 'Paid') { ?>
-                            <strong>✅ Fully Paid</strong>
-                            <p style="margin: 5px 0 0 0;">Total Amount Paid: <strong>RM <?= number_format($booking['total_price'], 2) ?></strong></p>
+                            <div class="payment-title">✅ Fully Paid</div>
+                            <div class="payment-row">
+                                <span>Total Amount Paid</span>
+                                <strong>RM <?= number_format($booking['total_price'], 2) ?></strong>
+                            </div>
                         <?php } else { ?>
-                            <strong>⏳ Deposit Paid - Balance Pending</strong>
-                            <p style="margin: 5px 0 0 0;">
-                                Deposit Paid: <strong style="color: #4caf50;">RM <?= number_format($deposit_amount, 2) ?></strong>
+                            <div class="payment-title">⏳ Deposit Paid - Balance Pending</div>
+                            <div class="payment-row">
+                                <span>Deposit Paid</span>
+                                <strong>RM <?= number_format($deposit_amount, 2) ?></strong>
+                            </div>
+                            <div class="payment-row">
+                                <span>Remaining Balance</span>
+                                <strong>RM <?= number_format($remaining_amount, 2) ?></strong>
+                            </div>
+                            <p style="margin-top:10px;color:#166534;font-size:13px;">
+                                Due before: <?= date('d M Y', strtotime($booking['event_date'])) ?>
                             </p>
-                            <p style="margin: 5px 0 0 0;">
-                                Remaining Balance: <strong style="color: #ff6b6b;">RM <?= number_format($remaining_amount, 2) ?></strong>
-                            </p>
-                            <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">Due before: <?= date('d M Y', strtotime($booking['event_date'])) ?></p>
                         <?php } ?>
+
                         <?php if ($payment) { ?>
                             <div class="payment-action-buttons">
                                 <a href="payment_confirmation.php?payment_id=<?= $payment['id'] ?>" class="btn-view-payment">
@@ -253,38 +563,30 @@ $message = isset($_GET['msg']) ? $_GET['msg'] : '';
                 <?php } ?>
 
                 <div class="booking-section">
-                    <p><strong>Selected Add-On / Vendor:</strong></p>
+                    <h4>Selected Add-On / Vendor</h4>
 
                     <?php if (mysqli_num_rows($vendorQ) == 0) { ?>
-
                         <p>No add-on selected.</p>
-
                     <?php } else { ?>
-
                         <div class="addon-list">
-
                             <?php while($vendor = mysqli_fetch_assoc($vendorQ)) { ?>
-
                                 <div class="addon-item">
                                     <div>
-                                        <strong><?= $vendor['vendor_name'] ?></strong>
-                                        <p><?= $vendor['service_type'] ?></p>
+                                        <strong><?= htmlspecialchars($vendor['vendor_name']) ?></strong>
+                                        <p><?= htmlspecialchars($vendor['service_type']) ?></p>
                                     </div>
-
-                                    <span>
+                                    <span class="addon-price">
                                         RM <?= number_format($vendor['price'], 2) ?>
                                     </span>
                                 </div>
-
                             <?php } ?>
-
                         </div>
-
                     <?php } ?>
 
                 </div>
 
             </div>
+        </div>
 
         <?php } ?>
 

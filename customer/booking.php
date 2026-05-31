@@ -25,9 +25,8 @@ $event_date = "";
 $packages = [];
 $vendors = [];
 
-$today_date = date('Y-m-d'); // Mengambil tarikh hari ini untuk semakan backend
+$today_date = date('Y-m-d');
 
-/* GET COMPANY */
 $companyQ = mysqli_query($conn, "
     SELECT * FROM companies
     WHERE id='$company_id'
@@ -41,11 +40,9 @@ if (mysqli_num_rows($companyQ) == 0) {
 
 $company = mysqli_fetch_assoc($companyQ);
 
-/* GET PLAN LIMIT */
 $limits = getPlanLimits($company['plan']);
 $maxAddons = $limits['addons_per_booking'];
 
-/* GET CATEGORY */
 $catQ = mysqli_query($conn, "
     SELECT * FROM event_categories
     WHERE id='$category_id'
@@ -59,10 +56,7 @@ if (mysqli_num_rows($catQ) == 0) {
 
 $category = mysqli_fetch_assoc($catQ);
 
-/* CHECK COMPANY AVAILABLE */
 function isCompanyAvailable($conn, $company_id, $event_date) {
-
-    /* 1. Check date closed by admin */
     $calendarCheck = mysqli_query($conn, "
         SELECT * FROM company_calendar
         WHERE company_id='$company_id'
@@ -73,7 +67,6 @@ function isCompanyAvailable($conn, $company_id, $event_date) {
         return false;
     }
 
-    /* 2. Check existing pending / confirmed booking */
     $bookingCheck = mysqli_query($conn, "
         SELECT * FROM bookings
         WHERE company_id='$company_id'
@@ -88,10 +81,7 @@ function isCompanyAvailable($conn, $company_id, $event_date) {
     return true;
 }
 
-/* CHECK VENDOR AVAILABLE */
 function isVendorAvailable($conn, $vendor_id, $event_date) {
-
-    /* Vendor close date sendiri */
     $calendarCheck = mysqli_query($conn, "
         SELECT * FROM vendor_calendar
         WHERE vendor_user_id='$vendor_id'
@@ -102,7 +92,6 @@ function isVendorAvailable($conn, $vendor_id, $event_date) {
         return false;
     }
 
-    /* Vendor already booked / pending */
     $bookingCheck = mysqli_query($conn, "
         SELECT bv.*
         FROM booking_vendors bv
@@ -119,9 +108,7 @@ function isVendorAvailable($conn, $vendor_id, $event_date) {
     return true;
 }
 
-/* LOAD PACKAGES AND AVAILABLE VENDORS */
 function loadBookingOptions($conn, $company_id, $category_id, $event_date, &$packages, &$vendors) {
-
     $packages = [];
     $vendors = [];
 
@@ -164,48 +151,35 @@ function loadBookingOptions($conn, $company_id, $category_id, $event_date, &$pac
     }
 }
 
-/* CHECK AVAILABILITY */
 if (isset($_POST['check_availability'])) {
-
     $event_date = $_POST['event_date'];
 
     if ($event_date == "") {
         $error = "Please select event date.";
-    }
-    // SEKATAN BACKEND: Menghalang cubaan semakan tarikh lepas
-    elseif ($event_date < $today_date) {
+    } elseif ($event_date < $today_date) {
         $error = "You cannot check availability or book for a past date.";
-    }
-    elseif (!isCompanyAvailable($conn, $company_id, $event_date)) {
+    } elseif (!isCompanyAvailable($conn, $company_id, $event_date)) {
         $error = "This company is not available on the selected date.";
-    }
-    else {
+    } else {
         $available = true;
         loadBookingOptions($conn, $company_id, $category_id, $event_date, $packages, $vendors);
     }
 }
 
-/* SUBMIT BOOKING */
 if (isset($_POST['submit_booking'])) {
-
     $event_date = $_POST['event_date'];
     $package_id = $_POST['package_id'];
     $vendor_ids = isset($_POST['vendor_ids']) ? $_POST['vendor_ids'] : [];
 
     if ($event_date == "" || $package_id == "") {
         $error = "Please select date and package.";
-    }
-    // SEKATAN BACKEND: Menghalang penyerahan borang bertarikh lepas
-    elseif ($event_date < $today_date) {
+    } elseif ($event_date < $today_date) {
         $error = "You cannot complete a booking on a past date.";
-    }
-    elseif (count($vendor_ids) > $maxAddons) {
+    } elseif (count($vendor_ids) > $maxAddons) {
         $error = "You can only select up to $maxAddons add-on(s).";
-    }
-    elseif (!isCompanyAvailable($conn, $company_id, $event_date)) {
+    } elseif (!isCompanyAvailable($conn, $company_id, $event_date)) {
         $error = "This company is not available on the selected date.";
-    }
-    else {
+    } else {
 
         $packageQ = mysqli_query($conn, "
             SELECT *
@@ -217,16 +191,12 @@ if (isset($_POST['submit_booking'])) {
 
         if (mysqli_num_rows($packageQ) == 0) {
             $error = "Invalid package selected.";
-        } 
-        else {
-
+        } else {
             $package = mysqli_fetch_assoc($packageQ);
             $total_price = $package['base_price'];
-
             $selectedVendorsData = [];
 
             foreach ($vendor_ids as $vendor_id) {
-
                 $vendorQ = mysqli_query($conn, "
                     SELECT 
                         u.id AS vendor_id,
@@ -260,7 +230,6 @@ if (isset($_POST['submit_booking'])) {
             }
 
             if ($error == "") {
-
                 mysqli_query($conn, "
                     INSERT INTO bookings
                     (user_id, package_id, event_date, total_price, status, company_id, vendor_id)
@@ -271,35 +240,28 @@ if (isset($_POST['submit_booking'])) {
                 $booking_id = mysqli_insert_id($conn);
 
                 foreach ($selectedVendorsData as $vendorData) {
-                    $v_id = $vendorData['vendor_id'];
-                    $v_price = $vendorData['price'];
-
                     mysqli_query($conn, "
                         INSERT INTO booking_vendors
                         (booking_id, vendor_id, price)
                         VALUES
-                        ('$booking_id', '$v_id', '$v_price')
+                        ('".$booking_id."', '".$vendorData['vendor_id']."', '".$vendorData['price']."')
                     ");
                 }
 
-                // Redirect to payment page instead of my_bookings
                 header("Location: payment.php?booking_id=$booking_id");
                 exit;
             }
         }
     }
 
-    // Pastikan opsyen tidak dipanggil jika ralat tarikh berlaku
     if ($event_date != "" && $event_date >= $today_date && isCompanyAvailable($conn, $company_id, $event_date)) {
         $available = true;
         loadBookingOptions($conn, $company_id, $category_id, $event_date, $packages, $vendors);
     }
 }
 
-/* GET BLOCKED DATES FOR CUSTOMER CALENDAR */
 $blockedDates = [];
 
-/* 1. Admin closed dates */
 $closedQ = mysqli_query($conn, "
     SELECT event_date
     FROM company_calendar
@@ -310,13 +272,12 @@ while ($row = mysqli_fetch_assoc($closedQ)) {
     $blockedDates[] = [
         'title' => 'Unavailable',
         'start' => $row['event_date'],
-        'backgroundColor' => '#ff4d4f',
-        'borderColor' => '#ff4d4f',
+        'backgroundColor' => '#ef4444',
+        'borderColor' => '#ef4444',
         'textColor' => '#ffffff'
     ];
 }
 
-/* 2. Pending / Confirmed booking dates */
 $bookingDateQ = mysqli_query($conn, "
     SELECT event_date
     FROM bookings
@@ -328,8 +289,8 @@ while ($row = mysqli_fetch_assoc($bookingDateQ)) {
     $blockedDates[] = [
         'title' => 'Unavailable',
         'start' => $row['event_date'],
-        'backgroundColor' => '#ff4d4f',
-        'borderColor' => '#ff4d4f',
+        'backgroundColor' => '#ef4444',
+        'borderColor' => '#ef4444',
         'textColor' => '#ffffff'
     ];
 }
@@ -338,13 +299,388 @@ while ($row = mysqli_fetch_assoc($bookingDateQ)) {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Book Event</title>
+<title>Book Event</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/event_saas/assets/css/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/event_saas/assets/css/style.css">
 
-    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+
+<style>
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background:
+        radial-gradient(circle at top left, rgba(37,99,235,.16), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(14,165,233,.14), transparent 36%),
+        #f4f7fb;
+    color: #0f172a;
+}
+
+.container {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 38px 24px 70px;
+}
+
+.back-link {
+    display: inline-block;
+    margin-bottom: 22px;
+    color: #2563eb;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.company-hero {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 26px;
+    background: white;
+    border-radius: 30px;
+    overflow: hidden;
+    box-shadow: 0 22px 50px rgba(15,23,42,.10);
+    border: 1px solid #e2e8f0;
+    margin-bottom: 28px;
+}
+
+.company-img {
+    height: 280px;
+    width: 100%;
+    object-fit: cover;
+}
+
+.company-placeholder {
+    height: 280px;
+    background: linear-gradient(135deg, #2563eb, #38bdf8);
+    color: white;
+    font-size: 72px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.company-info {
+    padding: 34px;
+}
+
+.badge {
+    display: inline-block;
+    padding: 8px 14px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    margin-bottom: 14px;
+}
+
+.company-info h1 {
+    margin: 0 0 10px;
+    font-size: 32px;
+}
+
+.company-info p {
+    color: #475569;
+    line-height: 1.7;
+    font-size: 14px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.info-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 14px;
+}
+
+.info-box small {
+    display: block;
+    color: #64748b;
+    margin-bottom: 5px;
+}
+
+.info-box strong {
+    font-size: 13px;
+}
+
+.booking-title {
+    margin-bottom: 20px;
+}
+
+.booking-title h2 {
+    margin: 0 0 6px;
+    font-size: 28px;
+}
+
+.booking-title p {
+    margin: 0;
+    color: #64748b;
+}
+
+.alert.error {
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+    padding: 15px 18px;
+    border-radius: 16px;
+    margin-bottom: 22px;
+    font-weight: 600;
+}
+
+.step-card {
+    background: white;
+    border-radius: 28px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 20px 45px rgba(15,23,42,.08);
+    padding: 28px;
+    margin-bottom: 26px;
+}
+
+.step-header {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    margin-bottom: 22px;
+}
+
+.step-no {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #2563eb, #0ea5e9);
+    color: white;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.step-header h3 {
+    margin: 0;
+    font-size: 22px;
+}
+
+.step-header p {
+    margin: 4px 0 0;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.calendar-layout {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 24px;
+    align-items: start;
+}
+
+#customerCalendar {
+    background: white;
+    border-radius: 22px;
+    overflow: hidden;
+}
+
+.fc .fc-toolbar-title {
+    font-size: 22px;
+}
+
+.fc .fc-button-primary {
+    background: #2563eb;
+    border-color: #2563eb;
+    border-radius: 10px;
+}
+
+.side-panel {
+    background: linear-gradient(135deg, #f8fafc, #eff6ff);
+    border: 1px solid #dbeafe;
+    border-radius: 22px;
+    padding: 20px;
+}
+
+.side-panel h4 {
+    margin: 0 0 10px;
+}
+
+.selected-date-box {
+    margin: 18px 0;
+    padding: 18px;
+    border-radius: 18px;
+    background: white;
+    border: 1px solid #e2e8f0;
+}
+
+.selected-date-box small {
+    display: block;
+    color: #64748b;
+    margin-bottom: 6px;
+}
+
+.selected-date-box strong {
+    font-size: 18px;
+}
+
+.legend {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #64748b;
+    font-size: 13px;
+    margin-top: 12px;
+}
+
+.legend-box {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    background: #ef4444;
+}
+
+.btn-primary {
+    width: 100%;
+    border: none;
+    padding: 14px 18px;
+    border-radius: 15px;
+    background: linear-gradient(135deg, #2563eb, #0ea5e9);
+    color: white;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 12px 25px rgba(37,99,235,.25);
+}
+
+.package-grid,
+.vendor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.select-card {
+    cursor: pointer;
+}
+
+.select-card input {
+    display: none;
+}
+
+.package-card,
+.vendor-card {
+    border: 2px solid #e2e8f0;
+    border-radius: 24px;
+    overflow: hidden;
+    background: #fff;
+    transition: .25s ease;
+    height: 100%;
+}
+
+.select-card input:checked + .package-card,
+.select-card input:checked + .vendor-card {
+    border-color: #2563eb;
+    box-shadow: 0 18px 40px rgba(37,99,235,.18);
+    transform: translateY(-4px);
+}
+
+.package-img,
+.vendor-img {
+    width: 100%;
+    height: 190px;
+    object-fit: cover;
+}
+
+.package-placeholder {
+    height: 190px;
+    background: linear-gradient(135deg, #dbeafe, #e0f2fe);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+.card-body h3 {
+    margin: 0 0 8px;
+    font-size: 20px;
+}
+
+.price {
+    color: #2563eb;
+    font-size: 20px;
+    font-weight: 800;
+    margin-bottom: 12px;
+}
+
+.card-body p {
+    margin: 8px 0;
+    color: #475569;
+    line-height: 1.6;
+    font-size: 13px;
+}
+
+.empty-state {
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    padding: 26px;
+    border-radius: 22px;
+    text-align: center;
+    color: #64748b;
+}
+
+.summary-card {
+    position: sticky;
+    bottom: 20px;
+    z-index: 10;
+    background: linear-gradient(135deg, #0f172a, #1d4ed8);
+    color: white;
+    border-radius: 28px;
+    padding: 26px;
+    box-shadow: 0 25px 55px rgba(37,99,235,.28);
+}
+
+.summary-card h3 {
+    margin: 0 0 10px;
+}
+
+.summary-card p {
+    margin: 8px 0;
+    opacity: .92;
+}
+
+.summary-total {
+    margin: 18px 0;
+    font-size: 30px;
+    font-weight: 800;
+}
+
+.submit-btn {
+    width: 100%;
+    border: none;
+    background: white;
+    color: #1d4ed8;
+    padding: 15px 20px;
+    border-radius: 16px;
+    font-weight: 800;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+}
+
+@media(max-width: 900px) {
+    .company-hero,
+    .calendar-layout,
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 </head>
 
 <body>
@@ -353,255 +689,211 @@ while ($row = mysqli_fetch_assoc($bookingDateQ)) {
 
 <div class="container">
 
-    <a href="company_details.php?company_id=<?= $company_id ?>" class="back-link">
-        ← Back to company details
-    </a>
+    <a href="company_details.php?company_id=<?= $company_id ?>" class="back-link">← Back to company details</a>
 
-    <div class="booking-wrapper">
-
-        <div class="booking-header">
-            <h2>Book Event</h2>
-            <p>
-                <strong><?= $company['company_name'] ?></strong> • 
-                <?= $category['name'] ?>
-            </p>
-        </div>
-
-        <?php if ($error != "") { ?>
-            <div class="alert error"><?= $error ?></div>
+    <section class="company-hero">
+        <?php if (!empty($company['logo'])) { ?>
+            <img src="../uploads/companies/<?= htmlspecialchars($company['logo']) ?>" class="company-img">
+        <?php } else { ?>
+            <div class="company-placeholder"><?= strtoupper(substr($company['company_name'], 0, 1)) ?></div>
         <?php } ?>
 
-        <div class="booking-step-card">
+        <div class="company-info">
+            <div class="badge"><?= htmlspecialchars($category['name']) ?> Booking</div>
+            <h1><?= htmlspecialchars($company['company_name']) ?></h1>
+            <p><?= !empty($company['description']) ? htmlspecialchars($company['description']) : 'No description available.' ?></p>
 
-            <h3>Step 1: Choose Event Date</h3>
-            <p class="muted">
-                Select an available date from the calendar. Red dates are unavailable.
-            </p>
-
-            <div class="customer-calendar-wrapper">
-                <div id="customerCalendar"></div>
-
-                <div class="calendar-info bottom-info">
-                    <span class="legend-box closed-box"></span>
-                    <span>Unavailable</span>
+            <div class="info-grid">
+                <div class="info-box">
+                    <small>Plan</small>
+                    <strong><?= htmlspecialchars($company['plan']) ?></strong>
+                </div>
+                <div class="info-box">
+                    <small>Phone</small>
+                    <strong><?= htmlspecialchars($company['phone']) ?></strong>
+                </div>
+                <div class="info-box">
+                    <small>Location</small>
+                    <strong><?= htmlspecialchars($company['address']) ?></strong>
                 </div>
             </div>
+        </div>
+    </section>
 
-            <form method="POST" id="dateForm">
+    <div class="booking-title">
+        <h2>Book Your Event</h2>
+        <p>Choose event date, select package and add vendor services if needed.</p>
+    </div>
 
-                <input type="hidden"
-                       name="event_date"
-                       id="selectedDate"
-                       value="<?= $event_date ?>"
-                       required>
+    <?php if ($error != "") { ?>
+        <div class="alert error"><?= htmlspecialchars($error) ?></div>
+    <?php } ?>
 
-                <p class="selected-date-text">
-                    Selected Date:
-                    <strong id="selectedDateText">
-                        <?= $event_date != "" ? $event_date : "No date selected" ?>
-                    </strong>
-                </p>
-
-                <button class="btn btn-primary" name="check_availability">
-                    Check Availability
-                </button>
-
-            </form>
-
+    <div class="step-card">
+        <div class="step-header">
+            <div class="step-no">1</div>
+            <div>
+                <h3>Choose Event Date</h3>
+                <p>Select an available date from the calendar. Red dates are unavailable.</p>
+            </div>
         </div>
 
-        <?php if ($available) { ?>
+        <div class="calendar-layout">
+            <div id="customerCalendar"></div>
 
-            <?php if (count($packages) == 0) { ?>
+            <div class="side-panel">
+                <h4>Booking Date</h4>
+                <p style="color:#64748b;font-size:13px;">Click one available date from the calendar.</p>
 
-                <div class="empty-state">
-                    <h3>No packages available</h3>
-                    <p>This company has no package under this event category.</p>
-                </div>
+                <form method="POST" id="dateForm">
+                    <input type="hidden" name="event_date" id="selectedDate" value="<?= htmlspecialchars($event_date) ?>" required>
 
-            <?php } else { ?>
-
-                <form method="POST">
-
-                    <input type="hidden" name="event_date" value="<?= $event_date ?>">
-
-                    <div class="booking-step-card">
-
-                        <h3>Step 2: Choose Package</h3>
-
-                        <div class="package-grid">
-
-                            <?php foreach($packages as $package) { ?>
-
-                                <label class="select-card">
-
-                                    <input type="radio"
-                                           name="package_id"
-                                           value="<?= $package['id'] ?>"
-                                           data-price="<?= $package['base_price'] ?>"
-                                           required>
-
-                                    <div class="package-customer-card">
-
-                                        <?php if (!empty($package['image'])) { ?>
-                                            <img src="../uploads/packages/<?= $package['image'] ?>" 
-                                                 class="package-customer-img"
-                                                 alt="Package Image">
-                                        <?php } else { ?>
-                                            <div class="package-placeholder">📦</div>
-                                        <?php } ?>
-
-                                        <div class="package-customer-body">
-
-                                            <h3><?= $package['package_name'] ?></h3>
-
-                                            <p class="package-meta">
-                                                RM <?= number_format($package['base_price'], 2) ?>
-                                            </p>
-
-                                            <p><strong>Pax:</strong> <?= $package['pax'] ?> pax</p>
-                                            <p><strong>Description:</strong> <?= $package['description'] ?></p>
-                                            <p><strong>Menu:</strong> <?= $package['menu'] ?></p>
-
-                                        </div>
-
-                                    </div>
-
-                                </label>
-
-                            <?php } ?>
-
-                        </div>
-
+                    <div class="selected-date-box">
+                        <small>Selected Date</small>
+                        <strong id="selectedDateText">
+                            <?= $event_date != "" ? htmlspecialchars($event_date) : "No date selected" ?>
+                        </strong>
                     </div>
 
-                    <div class="booking-step-card">
-
-                        <h3>Step 3: Choose Add-On / Vendor Service</h3>
-                        <p class="muted">
-                            You can select up to <?= $maxAddons ?> add-on(s). Only available vendors are shown.
-                        </p>
-
-                        <?php if (count($vendors) == 0) { ?>
-
-                            <div class="empty-state">
-                                <h3>No add-on available</h3>
-                                <p>You can continue booking without vendor add-on.</p>
-                            </div>
-
-                        <?php } else { ?>
-
-                            <div class="vendor-grid">
-
-                                <?php foreach($vendors as $vendor) { ?>
-
-                                    <label class="select-card">
-
-                                        <input type="checkbox"
-                                               name="vendor_ids[]"
-                                               value="<?= $vendor['vendor_id'] ?>"
-                                               data-price="<?= $vendor['price'] ?>"
-                                               class="vendor-checkbox">
-
-                                        <div class="vendor-card">
-
-                                            <?php if (!empty($vendor['image'])) { ?>
-                                                <img src="../uploads/vendors/<?= $vendor['image'] ?>" 
-                                                     class="vendor-card-img"
-                                                     alt="Vendor Image">
-                                            <?php } ?>
-
-                                            <div class="vendor-card-body">
-
-                                                <h3><?= $vendor['name'] ?></h3>
-
-                                                <p class="vendor-type">
-                                                    <?= $vendor['service_type'] ?> • 
-                                                    RM <?= number_format($vendor['price'], 2) ?>
-                                                </p>
-
-                                                <p><strong>Phone:</strong> <?= $vendor['phone'] ?></p>
-                                                <p><strong>Description:</strong> <?= $vendor['description'] ?></p>
-                                                <p><strong>Details:</strong> <?= $vendor['service_details'] ?></p>
-                                                <p><strong>Equipment:</strong> <?= $vendor['equipment'] ?></p>
-
-                                            </div>
-
-                                        </div>
-
-                                    </label>
-
-                                <?php } ?>
-
-                            </div>
-
-                        <?php } ?>
-
-                    </div>
-
-                    <div class="booking-step-card">
-
-                        <h3>Booking Summary</h3>
-
-                        <p>
-                            Event Date:
-                            <strong><?= $event_date ?></strong>
-                        </p>
-
-                        <h2>
-                            Total: RM <span id="totalPrice">0.00</span>
-                        </h2>
-
-                        <button class="btn btn-primary" name="submit_booking">
-                            Submit Booking
-                        </button>
-
-                    </div>
-
+                    <button class="btn-primary" name="check_availability">Check Availability</button>
                 </form>
 
-            <?php } ?>
+                <div class="legend">
+                    <span class="legend-box"></span>
+                    <span>Unavailable date</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <?php if ($available) { ?>
+
+        <?php if (count($packages) == 0) { ?>
+            <div class="empty-state">
+                <h3>No packages available</h3>
+                <p>This company has no package under this event category.</p>
+            </div>
+        <?php } else { ?>
+
+            <form method="POST">
+                <input type="hidden" name="event_date" value="<?= htmlspecialchars($event_date) ?>">
+
+                <div class="step-card">
+                    <div class="step-header">
+                        <div class="step-no">2</div>
+                        <div>
+                            <h3>Choose Package</h3>
+                            <p>Select one package that matches your event needs.</p>
+                        </div>
+                    </div>
+
+                    <div class="package-grid">
+                        <?php foreach($packages as $package) { ?>
+                            <label class="select-card">
+                                <input type="radio" name="package_id" value="<?= $package['id'] ?>" data-price="<?= $package['base_price'] ?>" required>
+
+                                <div class="package-card">
+                                    <?php if (!empty($package['image'])) { ?>
+                                        <img src="../uploads/packages/<?= htmlspecialchars($package['image']) ?>" class="package-img">
+                                    <?php } else { ?>
+                                        <div class="package-placeholder">📦</div>
+                                    <?php } ?>
+
+                                    <div class="card-body">
+                                        <h3><?= htmlspecialchars($package['package_name']) ?></h3>
+                                        <div class="price">RM <?= number_format($package['base_price'], 2) ?></div>
+                                        <p><strong>Pax:</strong> <?= htmlspecialchars($package['pax']) ?> pax</p>
+                                        <p><strong>Description:</strong> <?= htmlspecialchars($package['description']) ?></p>
+                                        <p><strong>Menu:</strong> <?= htmlspecialchars($package['menu']) ?></p>
+                                    </div>
+                                </div>
+                            </label>
+                        <?php } ?>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-header">
+                        <div class="step-no">3</div>
+                        <div>
+                            <h3>Choose Add-On / Vendor Service</h3>
+                            <p>You can select up to <?= $maxAddons ?> add-on(s). Only available vendors are shown.</p>
+                        </div>
+                    </div>
+
+                    <?php if (count($vendors) == 0) { ?>
+                        <div class="empty-state">
+                            <h3>No add-on available</h3>
+                            <p>You can continue booking without vendor add-on.</p>
+                        </div>
+                    <?php } else { ?>
+                        <div class="vendor-grid">
+                            <?php foreach($vendors as $vendor) { ?>
+                                <label class="select-card">
+                                    <input type="checkbox" name="vendor_ids[]" value="<?= $vendor['vendor_id'] ?>" data-price="<?= $vendor['price'] ?>" class="vendor-checkbox">
+
+                                    <div class="vendor-card">
+                                        <?php if (!empty($vendor['image'])) { ?>
+                                            <img src="../uploads/vendors/<?= htmlspecialchars($vendor['image']) ?>" class="vendor-img">
+                                        <?php } else { ?>
+                                            <div class="package-placeholder">🎤</div>
+                                        <?php } ?>
+
+                                        <div class="card-body">
+                                            <h3><?= htmlspecialchars($vendor['name']) ?></h3>
+                                            <div class="price">RM <?= number_format($vendor['price'], 2) ?></div>
+                                            <p><strong>Service:</strong> <?= htmlspecialchars($vendor['service_type']) ?></p>
+                                            <p><strong>Phone:</strong> <?= htmlspecialchars($vendor['phone']) ?></p>
+                                            <p><strong>Description:</strong> <?= htmlspecialchars($vendor['description']) ?></p>
+                                            <p><strong>Details:</strong> <?= htmlspecialchars($vendor['service_details']) ?></p>
+                                            <p><strong>Equipment:</strong> <?= htmlspecialchars($vendor['equipment']) ?></p>
+                                        </div>
+                                    </div>
+                                </label>
+                            <?php } ?>
+                        </div>
+                    <?php } ?>
+                </div>
+
+                <div class="summary-card">
+                    <h3>Booking Summary</h3>
+                    <p>Event Date: <strong><?= htmlspecialchars($event_date) ?></strong></p>
+                    <div class="summary-total">RM <span id="totalPrice">0.00</span></div>
+                    <button class="submit-btn" name="submit_booking">Submit Booking & Continue Payment</button>
+                </div>
+            </form>
 
         <?php } ?>
 
-    </div>
+    <?php } ?>
 
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-
     const calendarEl = document.getElementById('customerCalendar');
 
     if (calendarEl) {
-
         let blockedDates = <?= json_encode($blockedDates) ?>;
-        
-        // Mengambil tarikh hari ini mengikut format standard YYYY-MM-DD
-        const todayStr = new Date().toLocaleDateString('en-CA'); 
+        const todayStr = new Date().toLocaleDateString('en-CA');
 
         const calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
-            contentHeight: 500,
-
+            contentHeight: 560,
             headerToolbar: {
                 left: 'prev,next today',
                 center: 'title',
                 right: 'dayGridMonth'
             },
-
             events: blockedDates,
-
             dateClick: function(info) {
                 const clickedDate = info.dateStr;
 
-                // 1. SEKATAN JAVASCRIPT: Menghalang klik tarikh lepas
                 if (clickedDate < todayStr) {
                     alert("Past dates are unavailable for booking. Please select a current or future date.");
                     return;
                 }
 
-                // 2. Semak jika tarikh tersebut telah disekat/penuh
                 const isBlocked = blockedDates.some(function(event) {
                     return event.start === clickedDate;
                 });
@@ -618,7 +910,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         calendar.render();
     }
-
 });
 </script>
 

@@ -16,7 +16,6 @@ if (!isset($_GET['payment_id'])) {
 
 $payment_id = intval($_GET['payment_id']);
 
-// Get payment details
 $paymentQ = mysqli_query($conn, "
     SELECT 
         p.*,
@@ -42,7 +41,6 @@ $payment = mysqli_fetch_assoc($paymentQ);
 $error = "";
 $success = "";
 
-// Handle payment confirmation
 if (isset($_POST['confirm_payment'])) {
     $bank_ref_number = trim($_POST['bank_ref'] ?? '');
     $has_file = isset($_FILES['payment_proof']) && $_FILES['payment_proof']['size'] > 0;
@@ -57,16 +55,13 @@ if (isset($_POST['confirm_payment'])) {
             $file_tmp = $_FILES['payment_proof']['tmp_name'];
             $file_size = $_FILES['payment_proof']['size'];
             $file_ext = pathinfo($file_name, PATHINFO_EXTENSION);
-
-            // Allowed file types
             $allowed_exts = ['pdf', 'jpg', 'jpeg', 'png', 'gif'];
 
             if (!in_array(strtolower($file_ext), $allowed_exts)) {
                 $error = "Invalid file type. Allowed: PDF, JPG, PNG, GIF.";
-            } elseif ($file_size > 5000000) { // 5MB limit
+            } elseif ($file_size > 5000000) {
                 $error = "File size too large. Max 5MB allowed.";
             } else {
-                // Create upload directory if not exists
                 $upload_dir = '../uploads/payments/';
                 if (!is_dir($upload_dir)) {
                     mkdir($upload_dir, 0755, true);
@@ -116,356 +111,544 @@ if (isset($_POST['confirm_payment'])) {
     }
 }
 
-// Get bank details for display
-$bankDetailsQ = mysqli_query($conn, "
-    SELECT * FROM payment_methods
-    WHERE is_active = TRUE
-");
+$statusClass = strtolower($payment['payment_status']);
+$isCompleted = $payment['payment_status'] == 'Completed';
+$depositPercent = ($payment['amount'] > 0) ? round(($payment['deposit_amount'] / $payment['amount']) * 100) : 0;
+$remainingPercent = max(0, 100 - $depositPercent);
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Payment Confirmation</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/event_saas/assets/css/style.css">
+
     <style>
-        .confirmation-container {
-            max-width: 800px;
-            margin: 40px auto;
-            padding: 0 20px;
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --success: #16a34a;
+            --warning: #f59e0b;
+            --danger: #dc2626;
+            --dark: #0f172a;
+            --muted: #64748b;
+            --line: #e2e8f0;
+            --soft: #f8fafc;
+            --white: #ffffff;
+            --shadow: 0 22px 60px rgba(15, 23, 42, .12);
+            --radius: 24px;
         }
 
-        .confirmation-card {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            border: 1px solid #e0e0e0;
-            margin-bottom: 20px;
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(37, 99, 235, .18), transparent 32%),
+                radial-gradient(circle at top right, rgba(245, 158, 11, .16), transparent 30%),
+                linear-gradient(135deg, #f8fafc 0%, #eef4ff 50%, #f8fafc 100%);
+            color: var(--dark);
+            min-height: 100vh;
         }
 
-        .payment-status {
+        .payment-page {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 38px 20px 70px;
+        }
+
+        .hero {
+            position: relative;
+            overflow: hidden;
+            border-radius: 32px;
+            padding: 34px;
+            color: white;
+            background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #f59e0b 130%);
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+        }
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            inset: -80px -80px auto auto;
+            width: 260px;
+            height: 260px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .16);
+        }
+
+        .hero-content {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.16);
+            border: 1px solid rgba(255,255,255,.24);
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 14px;
+        }
+
+        .hero h1 {
+            margin: 0;
+            font-size: clamp(28px, 5vw, 46px);
+            line-height: 1.05;
+            letter-spacing: -1px;
+        }
+
+        .hero p {
+            margin: 12px 0 0;
+            color: rgba(255,255,255,.82);
+            font-size: 15px;
+        }
+
+        .hero-amount {
+            min-width: 245px;
+            padding: 22px;
+            border-radius: 24px;
+            background: rgba(255,255,255,.14);
+            border: 1px solid rgba(255,255,255,.24);
+            backdrop-filter: blur(12px);
+        }
+
+        .hero-amount span {
+            display: block;
+            font-size: 13px;
+            color: rgba(255,255,255,.75);
+        }
+
+        .hero-amount strong {
+            display: block;
+            font-size: 32px;
+            margin-top: 5px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1.05fr .95fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .card {
+            background: rgba(255,255,255,.92);
+            border: 1px solid rgba(226,232,240,.9);
+            border-radius: var(--radius);
+            box-shadow: 0 16px 38px rgba(15, 23, 42, .08);
+            padding: 24px;
+            margin-bottom: 22px;
+        }
+
+        .status-card {
             text-align: center;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 6px;
+            border: none;
+            background: linear-gradient(180deg, #ffffff, #f8fafc);
+            position: relative;
+            overflow: hidden;
         }
 
-        .payment-status.pending {
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-        }
-
-        .payment-status.completed {
-            background: #d4edda;
-            border: 1px solid #28a745;
-        }
-
-        .payment-status h2 {
-            margin: 10px 0;
+        .status-card::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            height: 6px;
+            background: <?= $isCompleted ? 'linear-gradient(90deg, #16a34a, #86efac)' : 'linear-gradient(90deg, #f59e0b, #fde68a)' ?>;
         }
 
         .status-icon {
-            font-size: 48px;
+            width: 88px;
+            height: 88px;
+            display: grid;
+            place-items: center;
+            border-radius: 26px;
+            margin: 10px auto 16px;
+            font-size: 44px;
+            background: <?= $isCompleted ? '#dcfce7' : '#fffbeb' ?>;
+            border: 1px solid <?= $isCompleted ? '#86efac' : '#fde68a' ?>;
+        }
+
+        .status-card h2 {
+            margin: 0;
+            font-size: 26px;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            padding: 8px 14px;
+            border-radius: 999px;
+            margin-top: 12px;
+            font-weight: 700;
+            font-size: 13px;
+            color: <?= $isCompleted ? '#166534' : '#92400e' ?>;
+            background: <?= $isCompleted ? '#dcfce7' : '#fef3c7' ?>;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0 0 18px;
+            font-size: 19px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .info-box {
+            padding: 16px;
+            border-radius: 18px;
+            background: var(--soft);
+            border: 1px solid var(--line);
+        }
+
+        .info-box span {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 5px;
+        }
+
+        .info-box strong {
+            font-size: 16px;
+        }
+
+        .progress-wrap {
+            margin-top: 20px;
+            padding: 18px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #fff7ed, #fff);
+            border: 1px solid #fed7aa;
+        }
+
+        .progress-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            font-weight: 700;
             margin-bottom: 10px;
         }
 
-        .instruction-box {
-            background: #f0f7ff;
-            border-left: 4px solid #2196f3;
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 4px;
+        .progress-bar {
+            height: 13px;
+            border-radius: 999px;
+            overflow: hidden;
+            background: #e2e8f0;
         }
 
-        .instruction-box strong {
-            color: #1976d2;
+        .progress-fill {
+            height: 100%;
+            width: <?= $depositPercent ?>%;
+            background: linear-gradient(90deg, #2563eb, #f59e0b);
+            border-radius: inherit;
         }
 
-        .bank-details {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 6px;
-            margin: 15px 0;
-            font-family: monospace;
+        .notice {
+            padding: 16px;
+            border-radius: 18px;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1e3a8a;
+            font-size: 14px;
+            line-height: 1.7;
         }
 
-        .bank-details p {
-            margin: 5px 0;
-            word-break: break-all;
+        .bank-box {
+            padding: 18px;
+            border-radius: 20px;
+            background: #0f172a;
+            color: white;
+            margin: 14px 0 18px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.1);
         }
 
-        .bank-details .label {
-            font-weight: 600;
-            color: #333;
-            font-family: Poppins, sans-serif;
+        .bank-box p {
+            margin: 8px 0;
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            border-bottom: 1px dashed rgba(255,255,255,.18);
+            padding-bottom: 8px;
             font-size: 13px;
         }
 
-        .form-group {
-            margin-bottom: 20px;
+        .bank-box p:last-child { border-bottom: none; padding-bottom: 0; }
+        .bank-box span { color: #93c5fd; }
+        .bank-box strong { text-align: right; }
+
+        .method-list {
+            display: grid;
+            gap: 12px;
         }
 
-        .form-group label {
+        .method-item {
+            display: flex;
+            gap: 12px;
+            padding: 14px;
+            border-radius: 18px;
+            background: #f8fafc;
+            border: 1px solid var(--line);
+        }
+
+        .method-item b { display: block; margin-bottom: 2px; }
+        .method-item small { color: var(--muted); line-height: 1.5; }
+
+        .form-group { margin-bottom: 18px; }
+
+        label {
             display: block;
             margin-bottom: 8px;
-            font-weight: 500;
-            color: #333;
+            font-weight: 700;
+            color: #1e293b;
         }
 
-        .form-group input[type="file"],
-        .form-group textarea {
+        .hint {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
+            margin: 0 0 10px;
+        }
+
+        input[type="file"],
+        input[type="text"] {
             width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
+            padding: 14px 15px;
+            border-radius: 16px;
+            border: 1px solid #cbd5e1;
+            background: white;
             font-family: Poppins, sans-serif;
             font-size: 14px;
+            outline: none;
+            transition: .2s;
         }
 
-        .form-group textarea {
-            min-height: 80px;
-            resize: vertical;
+        input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, .12);
+        }
+
+        .btn-confirm,
+        .btn-secondary {
+            width: 100%;
+            border: none;
+            border-radius: 18px;
+            padding: 15px 18px;
+            font-family: Poppins, sans-serif;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: .2s;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
         }
 
         .btn-confirm {
-            width: 100%;
-            padding: 12px;
-            background: #28a745;
             color: white;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 16px;
-            margin-top: 10px;
+            background: linear-gradient(135deg, #16a34a, #22c55e);
+            box-shadow: 0 12px 24px rgba(34,197,94,.25);
         }
 
-        .btn-confirm:hover {
-            background: #218838;
-        }
+        .btn-confirm:hover { transform: translateY(-2px); box-shadow: 0 16px 30px rgba(34,197,94,.35); }
 
         .btn-secondary {
-            width: 100%;
-            padding: 12px;
-            background: #6c757d;
             color: white;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 16px;
-            margin-top: 10px;
-        }
-
-        .btn-secondary:hover {
-            background: #5a6268;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            margin-top: 12px;
         }
 
         .alert {
-            padding: 15px;
-            border-radius: 6px;
+            padding: 16px 18px;
+            border-radius: 18px;
             margin-bottom: 20px;
+            font-weight: 600;
         }
 
         .alert.error {
-            background: #ffebee;
-            color: #c62828;
-            border-left: 4px solid #c62828;
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
         }
 
         .alert.success {
-            background: #e8f5e9;
-            color: #2e7d32;
-            border-left: 4px solid #2e7d32;
+            background: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
         }
 
-        .payment-details {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin: 20px 0;
-            padding: 15px 0;
-            border-top: 1px solid #e0e0e0;
-            border-bottom: 1px solid #e0e0e0;
+        .complete-card {
+            background: linear-gradient(135deg, #f0fdf4, #ffffff);
+            border: 1px solid #bbf7d0;
         }
 
-        .payment-details > div {
-            font-size: 14px;
+        .complete-card ul {
+            margin: 12px 0 0;
+            padding-left: 20px;
+            line-height: 1.9;
+            color: #334155;
         }
 
-        .payment-details strong {
-            color: #333;
+        @media (max-width: 900px) {
+            .grid { grid-template-columns: 1fr; }
+            .hero { padding: 26px; }
         }
 
-        @media (max-width: 600px) {
-            .payment-details {
-                grid-template-columns: 1fr;
-            }
+        @media (max-width: 560px) {
+            .payment-page { padding: 22px 14px 50px; }
+            .info-grid { grid-template-columns: 1fr; }
+            .bank-box p { display: block; }
+            .bank-box strong { display: block; text-align: left; margin-top: 4px; }
         }
     </style>
 </head>
 
 <body>
-
 <?php include('header.php'); ?>
 
-<div class="confirmation-container">
+<main class="payment-page">
+    <section class="hero">
+        <div class="hero-content">
+            <div>
+                <div class="badge">💳 Secure Payment Confirmation</div>
+                <h1>Confirm Your Event Payment</h1>
+                <p>Booking #<?= $payment['booking_id'] ?> • <?= htmlspecialchars($payment['company_name']) ?></p>
+            </div>
 
-    <div style="margin-bottom: 30px;">
-        <h2 style="margin-bottom: 5px;">Payment Confirmation</h2>
-        <p class="muted">Booking #<?= $payment['booking_id'] ?> • <?= $payment['company_name'] ?></p>
-    </div>
+            <div class="hero-amount">
+                <span>Deposit Payment</span>
+                <strong>RM <?= number_format($payment['deposit_amount'], 2) ?></strong>
+                <span><?= $depositPercent ?>% from total booking amount</span>
+            </div>
+        </div>
+    </section>
 
     <?php if ($error != "") { ?>
-        <div class="alert error"><?= $error ?></div>
+        <div class="alert error">⚠️ <?= htmlspecialchars($error) ?></div>
     <?php } ?>
 
     <?php if ($success != "") { ?>
-        <div class="alert success"><?= $success ?></div>
+        <div class="alert success">✅ <?= htmlspecialchars($success) ?></div>
     <?php } ?>
 
-    <!-- Payment Status -->
-    <div class="payment-status <?= strtolower($payment['payment_status']) ?>">
-        <div class="status-icon">
-            <?php if ($payment['payment_status'] == 'Completed') { ?>
-                ✅
+    <section class="grid">
+        <div>
+            <div class="card status-card">
+                <div class="status-icon"><?= $isCompleted ? '✅' : '⏳' ?></div>
+                <h2><?= htmlspecialchars($payment['payment_status']) ?></h2>
+                <div class="status-pill"><?= $isCompleted ? 'Payment Verified' : 'Waiting for Confirmation' ?></div>
+                <p class="hint" style="margin-top:14px;">Your payment status will be updated after proof/reference is submitted.</p>
+            </div>
+
+            <div class="card">
+                <h3 class="section-title">🧾 Payment Details</h3>
+                <div class="info-grid">
+                    <div class="info-box">
+                        <span>Deposit Amount</span>
+                        <strong>RM <?= number_format($payment['deposit_amount'], 2) ?></strong>
+                    </div>
+                    <div class="info-box">
+                        <span>Payment Method</span>
+                        <strong><?= ucfirst(str_replace('_', ' ', $payment['payment_method'])) ?></strong>
+                    </div>
+                    <div class="info-box">
+                        <span>Total Amount</span>
+                        <strong>RM <?= number_format($payment['amount'], 2) ?></strong>
+                    </div>
+                    <div class="info-box">
+                        <span>Remaining Balance</span>
+                        <strong>RM <?= number_format($payment['remaining_amount'], 2) ?></strong>
+                    </div>
+                </div>
+
+                <div class="progress-wrap">
+                    <div class="progress-row">
+                        <span>Paid: <?= $depositPercent ?>%</span>
+                        <span>Balance: <?= $remainingPercent ?>%</span>
+                    </div>
+                    <div class="progress-bar"><div class="progress-fill"></div></div>
+                    <p class="hint" style="margin:12px 0 0;">Remaining balance is due before your event date.</p>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <?php if ($payment['payment_status'] == 'Pending') { ?>
+                <div class="card">
+                    <h3 class="section-title">🏦 Payment Instructions</h3>
+                    <div class="notice">
+                        Please make the payment to the account below. Use your booking ID as reference so the admin can verify faster.
+                    </div>
+
+                    <div class="bank-box">
+                        <p><span>Bank Name</span><strong>MAYBANK BERHAD</strong></p>
+                        <p><span>Account Holder</span><strong>EVENT SAAS MANAGEMENT</strong></p>
+                        <p><span>Account Number</span><strong>170098765432</strong></p>
+                        <p><span>Reference</span><strong>BOOKING #<?= $payment['booking_id'] ?></strong></p>
+                    </div>
+
+                    <div class="method-list">
+                        <div class="method-item">
+                            <div>📱</div>
+                            <div><b>Online Banking / FPX</b><small>FPX Code: 01087000 • Reference: Booking #<?= $payment['booking_id'] ?></small></div>
+                        </div>
+                        <div class="method-item">
+                            <div>💼</div>
+                            <div><b>E-Wallet / Card</b><small>Touch n Go, Boost, Visa or Mastercard if available.</small></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="section-title">📤 Upload Payment Proof</h3>
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="payment_proof">Receipt / Bank Slip</label>
+                            <p class="hint">Upload PDF, JPG, PNG or GIF. Maximum file size is 5MB.</p>
+                            <input type="file" id="payment_proof" name="payment_proof" accept=".pdf,.jpg,.jpeg,.png,.gif">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="reference">Reference / Transaction Number</label>
+                            <input type="text" id="reference" name="bank_ref" placeholder="Example: FPX123456789 / MBB Transfer ID">
+                        </div>
+
+                        <button type="submit" name="confirm_payment" class="btn-confirm">✓ Submit Payment Confirmation</button>
+                    </form>
+                </div>
             <?php } else { ?>
-                ⏳
+                <div class="card complete-card">
+                    <h3 class="section-title">✅ Payment Confirmed!</h3>
+                    <p>Your deposit payment has been received and your booking is confirmed.</p>
+                    <ul>
+                        <li>Confirmation email will be sent to <strong><?= htmlspecialchars($payment['email']) ?></strong></li>
+                        <li>Save your booking details for your record.</li>
+                        <li>Remaining balance RM <?= number_format($payment['remaining_amount'], 2) ?> is due before the event date.</li>
+                    </ul>
+                    <a href="my_bookings.php" class="btn-secondary">← Back to My Bookings</a>
+                </div>
             <?php } ?>
         </div>
-        <h2><?= $payment['payment_status'] ?></h2>
-        <p>Deposit Payment: <strong>RM <?= number_format($payment['deposit_amount'], 2) ?></strong></p>
-    </div>
-
-    <div class="confirmation-card">
-
-        <h3>📝 Payment Details</h3>
-
-        <div class="payment-details">
-            <div>
-                <strong>Deposit Amount:</strong>
-                RM <?= number_format($payment['deposit_amount'], 2) ?>
-            </div>
-            <div>
-                <strong>Payment Method:</strong>
-                <?= ucfirst(str_replace('_', ' ', $payment['payment_method'])) ?>
-            </div>
-            <div>
-                <strong>Total Amount:</strong>
-                RM <?= number_format($payment['amount'], 2) ?>
-            </div>
-            <div>
-                <strong>Remaining Balance:</strong>
-                RM <?= number_format($payment['remaining_amount'], 2) ?>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- Payment Plan Reminder -->
-    <div class="confirmation-card" style="background: #fff3cd; border-left: 4px solid #ff9800;">
-        <h3>⚠️ Important - Your Payment Plan</h3>
-        <div style="margin-top: 15px;">
-            <p style="margin: 10px 0;"><strong>Amount You Just Paid (Deposit):</strong></p>
-            <p style="font-size: 18px; color: #ff6b6b; font-weight: bold; margin: 5px 0;">RM <?= number_format($payment['deposit_amount'], 2) ?> (10%)</p>
-            
-            <p style="margin: 15px 0 10px 0; border-top: 1px solid #ffc107; padding-top: 15px;"><strong>Remaining Balance (Still Due):</strong></p>
-            <p style="font-size: 18px; color: #ff6b6b; font-weight: bold; margin: 5px 0;">RM <?= number_format($payment['remaining_amount'], 2) ?> (90%)</p>
-            
-            <p style="margin: 15px 0 0 0; color: #333;"><strong>Due Date:</strong> Before your event date</p>
-            
-            <p style="margin: 15px 0 0 0; padding: 12px; background: #ffecb3; border-radius: 4px; color: #333;">You will be reminded to pay the remaining balance before your event date.</p>
-        </div>
-    </div>
-
-    <!-- Payment Instructions -->
-    <?php if ($payment['payment_status'] == 'Pending') { ?>
-        
-        <div class="confirmation-card">
-            <h3>💳 Payment Instructions</h3>
-
-            <div class="instruction-box">
-                <strong>⚠️ Important:</strong> Please make the payment to the account details below using your preferred payment method.
-            </div>
-
-            <h4>Bank Transfer / FPX Details:</h4>
-            <div class="bank-details">
-                <p><span class="label">Bank Name:</span> MAYBANK BERHAD</p>
-                <p><span class="label">Account Holder:</span> EVENT SAAS MANAGEMENT</p>
-                <p><span class="label">Account Number:</span> 170098765432</p>
-                <p><span class="label">Reference:</span> USE BOOKING ID #<?= $payment['booking_id'] ?></p>
-            </div>
-
-            <h4>Online Banking (Malaysia):</h4>
-            <div class="instruction-box">
-                <p>You can also transfer using your bank's mobile app or online banking.</p>
-                <p><strong>FPX Code:</strong> 01087000</p>
-                <p><strong>Reference:</strong> Booking #<?= $payment['booking_id'] ?></p>
-            </div>
-
-            <h4>Other Payment Methods:</h4>
-            <div class="instruction-box">
-                <p>• <strong>E-Wallet:</strong> GCash, Boost, Touch n Go</p>
-                <p>• <strong>Credit Card:</strong> Visa, Mastercard (if available)</p>
-                <p>Contact our support for alternative payment methods.</p>
-            </div>
-
-            <!-- Upload Proof Form -->
-            <form method="POST" enctype="multipart/form-data" style="margin-top: 30px;">
-
-                <div class="form-group">
-                    <label for="payment_proof">📸 Upload Payment Proof</label>
-                    <p class="muted" style="font-size: 13px; margin: 5px 0 10px 0;">
-                        Upload screenshot, transfer receipt or bank slip. Allowed formats: PDF, JPG, PNG, GIF (Max 5MB). Either upload proof or enter a reference number below.
-                    </p>
-                    <input type="file" 
-                           id="payment_proof" 
-                           name="payment_proof" 
-                           accept=".pdf,.jpg,.jpeg,.png,.gif">
-                </div>
-
-                <div class="form-group">
-                    <label for="reference">Reference / Transaction Number</label>
-                    <input type="text" 
-                           id="reference" 
-                           name="bank_ref" 
-                           placeholder="e.g., FPX Reference, Bank Transaction ID">
-                </div>
-
-                <button type="submit" name="confirm_payment" class="btn-confirm">
-                    ✓ Confirm Payment Received
-                </button>
-
-            </form>
-
-        </div>
-
-    <?php } else { ?>
-
-        <!-- Confirmed -->
-        <div class="confirmation-card" style="background: #e8f5e9; border-color: #28a745;">
-            <h3>✅ Payment Confirmed!</h3>
-            <p>Your deposit payment has been received and your booking is confirmed.</p>
-            
-            <div class="instruction-box" style="background: #e8f5e9; border-color: #28a745;">
-                <strong>Next Steps:</strong>
-                <p style="margin-top: 10px;">
-                    • You will receive a confirmation email at <strong><?= $payment['email'] ?></strong><br>
-                    • Save the booking details for your records<br>
-                    • Remaining balance (RM <?= number_format($payment['remaining_amount'], 2) ?>) is due before the event date<br>
-                    • Check your booking details for any additional requirements
-                </p>
-            </div>
-
-            <a href="my_bookings.php" class="btn btn-primary" style="display: inline-block; margin-top: 15px; text-decoration: none;">
-                ← Back to My Bookings
-            </a>
-        </div>
-
-    <?php } ?>
-
-</div>
+    </section>
+</main>
 
 </body>
 </html>
