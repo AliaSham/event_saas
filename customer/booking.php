@@ -636,9 +636,8 @@ body {
 }
 
 .summary-card {
-    position: sticky;
-    bottom: 20px;
-    z-index: 10;
+    position: relative;
+    margin-top: 26px;
     background: linear-gradient(135deg, #0f172a, #1d4ed8);
     color: white;
     border-radius: 28px;

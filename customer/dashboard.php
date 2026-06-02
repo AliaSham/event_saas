@@ -243,30 +243,6 @@ body {
     background: linear-gradient(to top, rgba(15,23,42,.72), transparent 58%);
 }
 
-.plan-badge {
-    position: absolute;
-    left: 16px;
-    bottom: 16px;
-    padding: 8px 13px;
-    background: rgba(255,255,255,.92);
-    color: #1d4ed8;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 700;
-}
-
-.booking-badge {
-    position: absolute;
-    right: 16px;
-    bottom: 16px;
-    padding: 8px 13px;
-    background: rgba(15,23,42,.82);
-    color: white;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 600;
-}
-
 .company-card-body {
     padding: 23px;
 }
@@ -484,7 +460,6 @@ body {
                 $is_not_available = true;
             }
 
-            $planName = !empty($company['plan']) ? htmlspecialchars($company['plan']) : 'Standard';
         ?>
 
         <div class="company-card <?= $is_not_available ? 'locked-company' : '' ?>" data-name="<?= strtolower(htmlspecialchars($company['company_name'])) ?>">
@@ -506,8 +481,6 @@ body {
                 <?php } ?>
 
                 <div class="image-gradient"></div>
-                <div class="plan-badge"><?= $planName ?> Plan</div>
-                <div class="booking-badge"><?= $company['total_active_bookings'] ?> Booking</div>
             </div>
 
             <div class="company-card-body">
