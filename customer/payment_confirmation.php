@@ -9,27 +9,51 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'customer') {
 
 $user_id = $_SESSION['user_id'];
 
-if (!isset($_GET['payment_id'])) {
+$history_id = null;
+$payment_id = null;
+$isHistory = false;
+
+if (isset($_GET['payment_id'])) {
+    $payment_id = intval($_GET['payment_id']);
+} elseif (isset($_GET['history_id'])) {
+    $history_id = intval($_GET['history_id']);
+    $isHistory = true;
+} else {
     header("Location: my_bookings.php");
     exit;
 }
 
-$payment_id = intval($_GET['payment_id']);
-
-$paymentQ = mysqli_query($conn, "
-    SELECT 
-        p.*,
-        b.id as booking_id,
-        c.company_name,
-        u.email,
-        u.phone
-    FROM payments p
-    JOIN bookings b ON p.booking_id = b.id
-    JOIN companies c ON b.company_id = c.id
-    JOIN users u ON p.user_id = u.id
-    WHERE p.id = '$payment_id'
-    AND p.user_id = '$user_id'
-");
+if ($isHistory) {
+    $paymentQ = mysqli_query($conn, "
+        SELECT 
+            h.*,
+            b.id as booking_id,
+            c.company_name,
+            u.email,
+            u.phone
+        FROM payment_history h
+        JOIN bookings b ON h.booking_id = b.id
+        JOIN companies c ON b.company_id = c.id
+        JOIN users u ON b.user_id = u.id
+        WHERE h.id = '$history_id'
+        AND b.user_id = '$user_id'
+    ");
+} else {
+    $paymentQ = mysqli_query($conn, "
+        SELECT 
+            p.*,
+            b.id as booking_id,
+            c.company_name,
+            u.email,
+            u.phone
+        FROM payments p
+        JOIN bookings b ON p.booking_id = b.id
+        JOIN companies c ON b.company_id = c.id
+        JOIN users u ON p.user_id = u.id
+        WHERE p.id = '$payment_id'
+        AND p.user_id = '$user_id'
+    ");
+}
 
 if (mysqli_num_rows($paymentQ) == 0) {
     header("Location: my_bookings.php");
@@ -41,9 +65,19 @@ $payment = mysqli_fetch_assoc($paymentQ);
 $error = "";
 $success = "";
 
+$confirmAmount = $isHistory ? $payment['amount'] : $payment['deposit_amount'];
+if ($isHistory) {
+    $depositPercent = 100;
+    $remainingPercent = 0;
+} else {
+    $depositPercent = ($payment['amount'] > 0) ? round(($payment['deposit_amount'] / $payment['amount']) * 100) : 0;
+    $remainingPercent = max(0, 100 - $depositPercent);
+}
+
 if (isset($_POST['confirm_payment'])) {
     $bank_ref_number = trim($_POST['bank_ref'] ?? '');
     $has_file = isset($_FILES['payment_proof']) && $_FILES['payment_proof']['size'] > 0;
+    $recordId = $isHistory ? $history_id : $payment_id;
 
     if (!$has_file && $bank_ref_number === '') {
         $error = "Please upload payment proof or enter a reference/transaction number.";
@@ -67,7 +101,7 @@ if (isset($_POST['confirm_payment'])) {
                     mkdir($upload_dir, 0755, true);
                 }
 
-                $new_filename = 'proof_' . $payment_id . '_' . time() . '.' . $file_ext;
+                $new_filename = 'proof_' . $recordId . '_' . time() . '.' . $file_ext;
 
                 if (!move_uploaded_file($file_tmp, $upload_dir . $new_filename)) {
                     $error = "Error uploading file. Please try again.";
@@ -77,35 +111,59 @@ if (isset($_POST['confirm_payment'])) {
 
         if ($error === '') {
             if ($new_filename !== null) {
-                $stmt = $conn->prepare("UPDATE payments SET payment_proof_file = ?, bank_ref_number = ?, payment_status = 'Completed', updated_at = NOW() WHERE id = ?");
-                $stmt->bind_param("ssi", $new_filename, $bank_ref_number, $payment_id);
+                if ($isHistory) {
+                    $stmt = $conn->prepare("UPDATE payment_history SET payment_proof_file = ?, transaction_id = ?, payment_status = 'Completed' WHERE id = ?");
+                } else {
+                    $stmt = $conn->prepare("UPDATE payments SET payment_proof_file = ?, bank_ref_number = ?, payment_status = 'Completed', updated_at = NOW() WHERE id = ?");
+                }
+                $stmt->bind_param("ssi", $new_filename, $bank_ref_number, $recordId);
             } else {
-                $stmt = $conn->prepare("UPDATE payments SET bank_ref_number = ?, payment_status = 'Completed', updated_at = NOW() WHERE id = ?");
-                $stmt->bind_param("si", $bank_ref_number, $payment_id);
+                if ($isHistory) {
+                    $stmt = $conn->prepare("UPDATE payment_history SET transaction_id = ?, payment_status = 'Completed' WHERE id = ?");
+                } else {
+                    $stmt = $conn->prepare("UPDATE payments SET bank_ref_number = ?, payment_status = 'Completed', updated_at = NOW() WHERE id = ?");
+                }
+                $stmt->bind_param("si", $bank_ref_number, $recordId);
             }
 
             if ($stmt->execute()) {
-                mysqli_query($conn, "UPDATE bookings SET payment_status = 'Partial', status = 'Confirmed' WHERE id = '{$payment['booking_id']}'");
-                $success = "Payment confirmed! Your booking is now confirmed.";
+                if ($isHistory) {
+                    mysqli_query($conn, "UPDATE bookings SET payment_status = 'Paid', status = 'Completed' WHERE id = '{$payment['booking_id']}'");
+                    $success = "Balance payment confirmed! Your booking is now fully paid.";
+                    $reloadQuery = mysqli_query($conn, "
+                        SELECT 
+                            h.*,
+                            b.id as booking_id,
+                            c.company_name,
+                            u.email,
+                            u.phone
+                        FROM payment_history h
+                        JOIN bookings b ON h.booking_id = b.id
+                        JOIN companies c ON b.company_id = c.id
+                        JOIN users u ON b.user_id = u.id
+                        WHERE h.id = '$history_id'
+                        AND b.user_id = '$user_id'
+                    ");
+                } else {
+                    mysqli_query($conn, "UPDATE bookings SET payment_status = 'Partial', status = 'Confirmed' WHERE id = '{$payment['booking_id']}'");
+                    $success = "Payment confirmed! Your booking is now confirmed.";
+                    $reloadQuery = mysqli_query($conn, "
+                        SELECT 
+                            p.*,
+                            b.id as booking_id,
+                            c.company_name,
+                            u.email,
+                            u.phone
+                        FROM payments p
+                        JOIN bookings b ON p.booking_id = b.id
+                        JOIN companies c ON b.company_id = c.id
+                        JOIN users u ON p.user_id = u.id
+                        WHERE p.id = '$payment_id'
+                        AND p.user_id = '$user_id'
+                    ");
+                }
 
-                $paymentQ = mysqli_query($conn, "
-                    SELECT 
-                        p.*,
-                        b.id as booking_id,
-                        c.company_name,
-                        u.email,
-                        u.phone
-                    FROM payments p
-                    JOIN bookings b ON p.booking_id = b.id
-                    JOIN companies c ON b.company_id = c.id
-                    JOIN users u ON p.user_id = u.id
-                    WHERE p.id = '$payment_id'
-                    AND p.user_id = '$user_id'
-                ");
-
-                $payment = mysqli_fetch_assoc($paymentQ);
-                
-                // Redirect to booking confirmation page
+                $payment = mysqli_fetch_assoc($reloadQuery);
                 header("Location: booking_confirmation.php?booking_id=" . $payment['booking_id']);
                 exit;
             } else {
@@ -117,8 +175,6 @@ if (isset($_POST['confirm_payment'])) {
 
 $statusClass = strtolower($payment['payment_status']);
 $isCompleted = $payment['payment_status'] == 'Completed';
-$depositPercent = ($payment['amount'] > 0) ? round(($payment['deposit_amount'] / $payment['amount']) * 100) : 0;
-$remainingPercent = max(0, 100 - $depositPercent);
 ?>
 
 <!DOCTYPE html>
@@ -640,9 +696,11 @@ $remainingPercent = max(0, 100 - $depositPercent);
             </div>
 
             <div class="hero-amount">
-                <span>Deposit Payment</span>
-                <strong>RM <?= number_format($payment['deposit_amount'], 2) ?></strong>
-                <span><?= $depositPercent ?>% from total booking amount</span>
+                <span><?= $isHistory ? 'Balance Payment' : 'Deposit Payment' ?></span>
+                <strong>RM <?= number_format($confirmAmount, 2) ?></strong>
+                <span>
+                    <?= $isHistory ? 'Final balance payment summary' : $depositPercent . '% from total booking amount' ?>
+                </span>
             </div>
         </div>
     </section>
@@ -677,33 +735,58 @@ $remainingPercent = max(0, 100 - $depositPercent);
 
                 <div class="payment-details-wrapper">
                     <div class="details-grid-layout">
-                        <div class="info-card-box">
-                            <span class="label-text">Deposit Amount</span>
-                            <span class="value-text">RM <?= number_format($payment['deposit_amount'], 2) ?></span>
-                        </div>
-                        <div class="info-card-box">
-                            <span class="label-text">Payment Method</span>
-                            <span class="value-text"><?= ucfirst(str_replace('_', ' ', $payment['payment_method'])) ?></span>
-                        </div>
-                        <div class="info-card-box">
-                            <span class="label-text">Total Amount</span>
-                            <span class="value-text">RM <?= number_format($payment['amount'], 2) ?></span>
-                        </div>
-                        <div class="info-card-box">
-                            <span class="label-text">Remaining Balance</span>
-                            <span class="value-text">RM <?= number_format($payment['remaining_amount'], 2) ?></span>
-                        </div>
+                        <?php if (!$isHistory) { ?>
+                            <div class="info-card-box">
+                                <span class="label-text">Deposit Amount</span>
+                                <span class="value-text">RM <?= number_format($payment['deposit_amount'], 2) ?></span>
+                            </div>
+                            <div class="info-card-box">
+                                <span class="label-text">Payment Method</span>
+                                <span class="value-text"><?= ucfirst(str_replace('_', ' ', $payment['payment_method'])) ?></span>
+                            </div>
+                            <div class="info-card-box">
+                                <span class="label-text">Total Amount</span>
+                                <span class="value-text">RM <?= number_format($payment['amount'], 2) ?></span>
+                            </div>
+                            <div class="info-card-box">
+                                <span class="label-text">Remaining Balance</span>
+                                <span class="value-text">RM <?= number_format($payment['remaining_amount'], 2) ?></span>
+                            </div>
+                        <?php } else { ?>
+                            <div class="info-card-box">
+                                <span class="label-text">Balance Amount</span>
+                                <span class="value-text">RM <?= number_format($payment['amount'], 2) ?></span>
+                            </div>
+                            <div class="info-card-box">
+                                <span class="label-text">Payment Method</span>
+                                <span class="value-text"><?= ucfirst(str_replace('_', ' ', $payment['payment_method'])) ?></span>
+                            </div>
+                            <div class="info-card-box">
+                                <span class="label-text">Transaction Reference</span>
+                                <span class="value-text"><?= htmlspecialchars($payment['transaction_id'] ?: 'Not provided') ?></span>
+                            </div>
+                        <?php } ?>
                     </div>
 
                     <div class="orange-progress-card">
-                        <div class="progress-data-row">
-                            <div class="data-item" style="color: #c2410c;">Paid: <?= $depositPercent ?>%</div>
-                            <div class="data-item" style="color: #1e293b;">Balance: <?= $remainingPercent ?>%</div>
-                        </div>
-                        <div class="custom-slider-bar">
-                            <div class="custom-slider-fill"></div>
-                        </div>
-                        <p class="progress-footer-hint">Remaining balance is due before your event date.</p>
+                        <?php if (!$isHistory) { ?>
+                            <div class="progress-data-row">
+                                <div class="data-item" style="color: #c2410c;">Paid: <?= $depositPercent ?>%</div>
+                                <div class="data-item" style="color: #1e293b;">Balance: <?= $remainingPercent ?>%</div>
+                            </div>
+                            <div class="custom-slider-bar">
+                                <div class="custom-slider-fill"></div>
+                            </div>
+                            <p class="progress-footer-hint">Remaining balance is due before your event date.</p>
+                        <?php } else { ?>
+                            <div class="progress-data-row">
+                                <div class="data-item" style="color: #16a34a;">Final balance payment submitted</div>
+                            </div>
+                            <div class="custom-slider-bar">
+                                <div class="custom-slider-fill" style="width: 100%;"></div>
+                            </div>
+                            <p class="progress-footer-hint">Once accepted, your booking will be marked fully paid.</p>
+                        <?php } ?>
                     </div>
                 </div>
             </div>
@@ -752,12 +835,21 @@ $remainingPercent = max(0, 100 - $depositPercent);
                     <div class="complete-icon-wrap">✔</div>
                     <div class="complete-details-side">
                         <h3>Payment Confirmed!</h3>
-                        <p>Your deposit payment has been successfully received and logged. Your booking record is now securely activated.</p>
-                        <ul>
-                            <li>A formal confirmation voucher will be transmitted to <strong><?= htmlspecialchars($payment['email']) ?></strong></li>
-                            <li>Kindly capture or keep this generation transaction summary reference safe.</li>
-                            <li>The outstanding balance of <strong>RM <?= number_format($payment['remaining_amount'], 2) ?></strong> is required prior to fulfillment execution.</li>
-                        </ul>
+                        <?php if ($isHistory) { ?>
+                            <p>Your balance payment has been successfully received and accepted. Your booking is now fully paid.</p>
+                            <ul>
+                                <li>A formal confirmation voucher will be sent to <strong><?= htmlspecialchars($payment['email']) ?></strong></li>
+                                <li>Your final balance payment of <strong>RM <?= number_format($payment['amount'], 2) ?></strong> has been accepted.</li>
+                                <li>Thank you for completing the payment. Your event will proceed as scheduled.</li>
+                            </ul>
+                        <?php } else { ?>
+                            <p>Your deposit payment has been successfully received and logged. Your booking record is now securely activated.</p>
+                            <ul>
+                                <li>A formal confirmation voucher will be transmitted to <strong><?= htmlspecialchars($payment['email']) ?></strong></li>
+                                <li>Kindly capture or keep this generation transaction summary reference safe.</li>
+                                <li>The outstanding balance of <strong>RM <?= number_format($payment['remaining_amount'], 2) ?></strong> is required prior to fulfillment execution.</li>
+                            </ul>
+                        <?php } ?>
                         <a href="my_bookings.php" class="btn-secondary">← Back to My Bookings</a>
                     </div>
                 </div>

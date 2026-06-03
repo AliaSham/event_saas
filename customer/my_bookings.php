@@ -332,25 +332,43 @@ body {
     color: white;
 }
 
-.addon-list {
-    display: grid;
-    gap: 12px;
-}
+                .tab-header {
+                    display: flex;
+                    gap: 10px;
+                    margin-bottom: 22px;
+                    flex-wrap: wrap;
+                }
 
-.addon-item {
-    padding: 16px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 16px;
-    display: flex;
-    justify-content: space-between;
-    gap: 15px;
-    align-items: center;
-}
+                .tab-button {
+                    border: 1px solid #cbd5e1;
+                    background: white;
+                    color: #0f172a;
+                    padding: 12px 18px;
+                    border-radius: 14px;
+                    cursor: pointer;
+                    font-weight: 600;
+                    transition: background .2s, border-color .2s, color .2s;
+                }
 
-.addon-item strong {
-    color: #0f172a;
-}
+                .tab-button.active {
+                    background: #2563eb;
+                    border-color: #1d4ed8;
+                    color: white;
+                }
+
+                .tab-panel {
+                    display: none;
+                    animation: fadeIn 180ms ease-in-out;
+                }
+
+                .tab-panel.active {
+                    display: block;
+                }
+
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
 
 .addon-item p {
     margin: 4px 0 0;
@@ -466,6 +484,19 @@ body {
             if (mysqli_num_rows($paymentQ) > 0) {
                 $payment = mysqli_fetch_assoc($paymentQ);
             }
+
+            $balancePaymentQ = mysqli_query($conn, "
+                SELECT * FROM payment_history
+                WHERE booking_id = '$booking_id'
+                AND payment_type = 'Balance'
+                ORDER BY id DESC
+                LIMIT 1
+            ");
+
+            $balancePayment = null;
+            if (mysqli_num_rows($balancePaymentQ) > 0) {
+                $balancePayment = mysqli_fetch_assoc($balancePaymentQ);
+            }
         ?>
 
         <div class="booking-card">
@@ -483,84 +514,152 @@ body {
 
             <div class="booking-content">
 
-                <div class="booking-info-grid">
-                    <div class="info-box">
-                        <small>Event Date</small>
-                        <strong><?= htmlspecialchars($booking['event_date']) ?></strong>
+                <div class="tab-header">
+                    <button type="button" class="tab-button active" data-tab="details-<?= $booking_id ?>">Booking Details</button>
+                    <button type="button" class="tab-button" data-tab="balance-<?= $booking_id ?>">Balance / Deposit</button>
+                </div>
+
+                <div class="tab-panel active" id="details-<?= $booking_id ?>">
+                    <div class="booking-info-grid">
+                        <div class="info-box">
+                            <small>Event Date</small>
+                            <strong><?= htmlspecialchars($booking['event_date']) ?></strong>
+                        </div>
+
+                        <div class="info-box">
+                            <small>Package</small>
+                            <strong><?= htmlspecialchars($booking['package_name']) ?></strong>
+                        </div>
+
+                        <div class="info-box">
+                            <small>Pax</small>
+                            <strong><?= htmlspecialchars($booking['pax']) ?> pax</strong>
+                        </div>
+
+                        <div class="info-box">
+                            <small>Total Price</small>
+                            <strong>RM <?= number_format($booking['total_price'], 2) ?></strong>
+                        </div>
                     </div>
 
-                    <div class="info-box">
-                        <small>Package</small>
-                        <strong><?= htmlspecialchars($booking['package_name']) ?></strong>
+                    <div class="booking-section">
+                        <h4>Package Description</h4>
+                        <p><?= htmlspecialchars($booking['package_description']) ?></p>
                     </div>
 
-                    <div class="info-box">
-                        <small>Pax</small>
-                        <strong><?= htmlspecialchars($booking['pax']) ?> pax</strong>
-                    </div>
-
-                    <div class="info-box">
-                        <small>Total Price</small>
-                        <strong>RM <?= number_format($booking['total_price'], 2) ?></strong>
+                    <div class="booking-section">
+                        <h4>Menu</h4>
+                        <p><?= htmlspecialchars($booking['menu']) ?></p>
                     </div>
                 </div>
 
-                <div class="booking-section">
-                    <h4>Package Description</h4>
-                    <p><?= htmlspecialchars($booking['package_description']) ?></p>
-                </div>
+                <div class="tab-panel" id="balance-<?= $booking_id ?>">
+                    <div class="booking-section">
+                        <h4>Balance Deposit Payment</h4>
+                        <p>Track deposit amount, remaining balance and payment confirmation details for this booking.</p>
+                    </div>
 
-                <div class="booking-section">
-                    <h4>Menu</h4>
-                    <p><?= htmlspecialchars($booking['menu']) ?></p>
-                </div>
-
-                <?php if ($booking['status'] == 'Payment Pending') { ?>
-                    <div class="payment-status-box pending">
-                        <div class="payment-title">⏳ Payment Pending</div>
-                        <div class="payment-row">
-                            <span>Deposit Required</span>
+                    <div class="booking-info-grid">
+                        <div class="info-box">
+                            <small>Deposit Amount</small>
                             <strong>RM <?= number_format($deposit_amount, 2) ?></strong>
                         </div>
-                        <p style="margin-top:10px;color:#92400e;font-size:13px;">
-                            Please complete the 10% deposit payment to confirm your booking.
-                        </p>
-                        <div class="payment-action-buttons">
-                            <a href="payment.php?booking_id=<?= $booking_id ?>" class="btn-pay-now">💳 Pay Now</a>
+                        <div class="info-box">
+                            <small>Remaining Balance</small>
+                            <strong>RM <?= number_format($remaining_amount, 2) ?></strong>
+                        </div>
+                        <div class="info-box">
+                            <small>Payment Status</small>
+                            <strong><?= htmlspecialchars($payment ? $payment['payment_status'] : 'Not Started') ?></strong>
+                        </div>
+                        <div class="info-box">
+                            <small>Payment Method</small>
+                            <strong><?= htmlspecialchars($payment ? ucfirst(str_replace('_', ' ', $payment['payment_method'])) : 'N/A') ?></strong>
                         </div>
                     </div>
-                <?php } elseif ($booking['payment_status'] == 'Partial' || $booking['payment_status'] == 'Paid') { ?>
-                    <div class="payment-status-box completed">
-                        <?php if ($booking['payment_status'] == 'Paid') { ?>
+
+                    <?php if ($balancePayment && $balancePayment['payment_status'] == 'Completed') { ?>
+                        <div class="payment-status-box completed">
+                            <div class="payment-title">✅ Balance Accepted</div>
+                            <div class="payment-row">
+                                <span>Balance Paid</span>
+                                <strong>RM <?= number_format($remaining_amount, 2) ?></strong>
+                            </div>
+                            <div class="payment-row">
+                                <span>Confirmation Status</span>
+                                <strong>Accepted</strong>
+                            </div>
+                            <div class="payment-row">
+                                <span>Paid On</span>
+                                <strong><?= date('d M Y H:i', strtotime($balancePayment['created_at'])) ?></strong>
+                            </div>
+                            <div class="payment-action-buttons">
+                                <a href="payment_confirmation.php?history_id=<?= $balancePayment['id'] ?>" class="btn-view-payment">📋 View Balance Details</a>
+                            </div>
+                        </div>
+                    <?php } elseif ($balancePayment && $balancePayment['payment_status'] == 'Pending') { ?>
+                        <div class="payment-status-box pending">
+                            <div class="payment-title">⏳ Balance Payment Pending Confirmation</div>
+                            <div class="payment-row">
+                                <span>Balance Due</span>
+                                <strong>RM <?= number_format($remaining_amount, 2) ?></strong>
+                            </div>
+                            <div class="payment-row">
+                                <span>Submitted On</span>
+                                <strong><?= date('d M Y H:i', strtotime($balancePayment['created_at'])) ?></strong>
+                            </div>
+                            <p style="margin-top:10px;color:#92400e;font-size:13px;">
+                                Your balance payment has been submitted and is waiting for acceptance.
+                            </p>
+                            <div class="payment-action-buttons">
+                                <a href="payment_confirmation.php?history_id=<?= $balancePayment['id'] ?>" class="btn-view-payment">📋 View Submission</a>
+                            </div>
+                        </div>
+                    <?php } elseif ($payment && $booking['payment_status'] == 'Partial') { ?>
+                        <div class="payment-status-box pending">
+                            <div class="payment-title">💰 Pay Remaining Balance</div>
+                            <div class="payment-row">
+                                <span>Remaining Balance</span>
+                                <strong>RM <?= number_format($remaining_amount, 2) ?></strong>
+                            </div>
+                            <p style="margin-top:10px;color:#92400e;font-size:13px;">
+                                Your deposit is confirmed. Complete the remaining balance to settle the booking.
+                            </p>
+                            <div class="payment-action-buttons">
+                                <a href="payment.php?booking_id=<?= $booking_id ?>&pay_type=balance" class="btn-pay-now">💳 Pay Balance</a>
+                            </div>
+                        </div>
+                    <?php } elseif ($booking['payment_status'] == 'Paid') { ?>
+                        <div class="payment-status-box completed">
                             <div class="payment-title">✅ Fully Paid</div>
                             <div class="payment-row">
-                                <span>Total Amount Paid</span>
-                                <strong>RM <?= number_format($booking['total_price'], 2) ?></strong>
+                                <span>Final Balance</span>
+                                <strong>RM <?= number_format($remaining_amount, 2) ?></strong>
                             </div>
-                        <?php } else { ?>
-                            <div class="payment-title">⏳ Deposit Paid - Balance Pending</div>
+                            <p style="margin-top:10px;color:#166534;font-size:13px;">
+                                Your balance payment has already been accepted.
+                            </p>
+                        </div>
+                    <?php } else { ?>
+                        <div class="payment-status-box pending">
+                            <div class="payment-title">🧾 Deposit Required</div>
                             <div class="payment-row">
-                                <span>Deposit Paid</span>
+                                <span>Deposit Required</span>
                                 <strong>RM <?= number_format($deposit_amount, 2) ?></strong>
                             </div>
                             <div class="payment-row">
                                 <span>Remaining Balance</span>
                                 <strong>RM <?= number_format($remaining_amount, 2) ?></strong>
                             </div>
-                            <p style="margin-top:10px;color:#166534;font-size:13px;">
-                                Due before: <?= date('d M Y', strtotime($booking['event_date'])) ?>
+                            <p style="margin-top:10px;color:#92400e;font-size:13px;">
+                                Complete the 10% deposit payment to start your confirmation process.
                             </p>
-                        <?php } ?>
-
-                        <?php if ($payment) { ?>
                             <div class="payment-action-buttons">
-                                <a href="payment_confirmation.php?payment_id=<?= $payment['id'] ?>" class="btn-view-payment">
-                                    📋 View Payment Details
-                                </a>
+                                <a href="payment.php?booking_id=<?= $booking_id ?>" class="btn-pay-now">💳 Pay Deposit</a>
                             </div>
-                        <?php } ?>
-                    </div>
-                <?php } ?>
+                        </div>
+                    <?php } ?>
+                </div>
 
                 <div class="booking-section">
                     <h4>Selected Add-On / Vendor</h4>
@@ -594,5 +693,23 @@ body {
 
 </div>
 
+<script>
+    document.querySelectorAll('.tab-header').forEach(function(header) {
+        header.addEventListener('click', function(event) {
+            var button = event.target.closest('.tab-button');
+            if (!button) return;
+            var panelId = button.getAttribute('data-tab');
+            var parent = button.closest('.booking-content');
+
+            parent.querySelectorAll('.tab-button').forEach(function(btn) {
+                btn.classList.toggle('active', btn === button);
+            });
+
+            parent.querySelectorAll('.tab-panel').forEach(function(panel) {
+                panel.classList.toggle('active', panel.id === panelId);
+            });
+        });
+    });
+</script>
 </body>
 </html>

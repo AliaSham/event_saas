@@ -43,18 +43,34 @@ $total_amount = $booking['total_price'];
 $deposit_amount = $total_amount * 0.10;
 $remaining_amount = $total_amount * 0.90;
 
+$pay_type = isset($_GET['pay_type']) && $_GET['pay_type'] === 'balance' ? 'balance' : 'deposit';
+
 $paymentQ = mysqli_query($conn, "
     SELECT * FROM payments
     WHERE booking_id = '$booking_id'
 ");
 
+$existing_payment = null;
 if (mysqli_num_rows($paymentQ) > 0) {
     $existing_payment = mysqli_fetch_assoc($paymentQ);
-    if ($existing_payment['payment_status'] == 'Completed') {
+}
+
+if ($pay_type === 'deposit') {
+    if ($existing_payment && $existing_payment['payment_status'] == 'Completed') {
         header("Location: my_bookings.php?msg=already_paid");
         exit;
     }
+} else {
+    if (!$existing_payment || $existing_payment['payment_status'] != 'Completed' || $booking['payment_status'] != 'Partial') {
+        header("Location: payment.php?booking_id=$booking_id");
+        exit;
+    }
 }
+
+$payment_label = $pay_type === 'balance' ? 'Remaining Balance Payment' : 'Deposit Payment';
+$payment_heading = $pay_type === 'balance' ? 'Complete Your Balance Payment' : 'Complete Your Deposit Payment';
+$payment_step = $pay_type === 'balance' ? 'Balance Payment' : 'Deposit Payment';
+$payment_amount = $pay_type === 'balance' ? $remaining_amount : $deposit_amount;
 
 $methodsQ = mysqli_query($conn, "
     SELECT * FROM payment_methods
@@ -72,54 +88,91 @@ if (isset($_POST['submit_payment'])) {
     if ($payment_method == "") {
         $error = "Please select a payment method.";
     } else {
-        $notes = "Deposit payment for booking #" . $booking_id;
-
-        $existingQ = mysqli_query($conn, "SELECT id FROM payments WHERE booking_id = '$booking_id'");
-
-        if (mysqli_num_rows($existingQ) > 0) {
-            $existingRow = mysqli_fetch_assoc($existingQ);
-            $payment_id = $existingRow['id'];
+        if ($pay_type === 'balance') {
+            mysqli_query($conn, "
+                CREATE TABLE IF NOT EXISTS payment_history (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    booking_id INT NOT NULL,
+                    payment_type VARCHAR(50) NOT NULL,
+                    amount DECIMAL(10, 2) NOT NULL,
+                    payment_method VARCHAR(50) NOT NULL,
+                    transaction_id VARCHAR(100),
+                    payment_status VARCHAR(50) NOT NULL DEFAULT 'Pending',
+                    payment_proof_file VARCHAR(255),
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE
+                )
+            ");
 
             $stmt = $conn->prepare("
-                UPDATE payments 
-                SET amount = ?, deposit_amount = ?, remaining_amount = ?, payment_method = ?, 
-                    bank_ref_number = ?, payment_status = 'Pending', notes = ?
-                WHERE id = ?
+                INSERT INTO payment_history
+                (booking_id, payment_type, amount, payment_method, transaction_id, payment_status)
+                VALUES (?, 'Balance', ?, ?, ?, 'Pending')
             ");
 
             $stmt->bind_param(
-                "dddsssi",
-                $total_amount,
-                $deposit_amount,
+                "idss",
+                $booking_id,
                 $remaining_amount,
                 $payment_method,
-                $bank_ref_number,
-                $notes,
-                $payment_id
+                $bank_ref_number
             );
         } else {
-            $stmt = $conn->prepare("
-                INSERT INTO payments 
-                (booking_id, user_id, amount, deposit_amount, remaining_amount, payment_method, 
-                 bank_ref_number, payment_status, notes)
-                VALUES 
-                (?, ?, ?, ?, ?, ?, ?, 'Pending', ?)
-            ");
+            $notes = "Deposit payment for booking #" . $booking_id;
 
-            $stmt->bind_param(
-                "iidddsss",
-                $booking_id,
-                $user_id,
-                $total_amount,
-                $deposit_amount,
-                $remaining_amount,
-                $payment_method,
-                $bank_ref_number,
-                $notes
-            );
+            $existingQ = mysqli_query($conn, "SELECT id FROM payments WHERE booking_id = '$booking_id'");
+
+            if (mysqli_num_rows($existingQ) > 0) {
+                $existingRow = mysqli_fetch_assoc($existingQ);
+                $payment_id = $existingRow['id'];
+
+                $stmt = $conn->prepare("
+                    UPDATE payments 
+                    SET amount = ?, deposit_amount = ?, remaining_amount = ?, payment_method = ?, 
+                        bank_ref_number = ?, payment_status = 'Pending', notes = ?
+                    WHERE id = ?
+                ");
+
+                $stmt->bind_param(
+                    "dddsssi",
+                    $total_amount,
+                    $deposit_amount,
+                    $remaining_amount,
+                    $payment_method,
+                    $bank_ref_number,
+                    $notes,
+                    $payment_id
+                );
+            } else {
+                $stmt = $conn->prepare("
+                    INSERT INTO payments 
+                    (booking_id, user_id, amount, deposit_amount, remaining_amount, payment_method, 
+                     bank_ref_number, payment_status, notes)
+                    VALUES 
+                    (?, ?, ?, ?, ?, ?, ?, 'Pending', ?)
+                ");
+
+                $stmt->bind_param(
+                    "iidddsss",
+                    $booking_id,
+                    $user_id,
+                    $total_amount,
+                    $deposit_amount,
+                    $remaining_amount,
+                    $payment_method,
+                    $bank_ref_number,
+                    $notes
+                );
+            }
         }
 
         if ($stmt->execute()) {
+            if ($pay_type === 'balance') {
+                $history_id = $stmt->insert_id;
+                header("Location: payment_confirmation.php?history_id=$history_id");
+                exit;
+            }
+
             if (mysqli_num_rows($existingQ) == 0) {
                 $payment_id = $stmt->insert_id;
             }
@@ -537,8 +590,8 @@ body {
     <a href="my_bookings.php" class="back-link">← Back to My Bookings</a>
 
     <section class="payment-hero">
-        <span class="hero-badge">💳 Secure Deposit Payment</span>
-        <h1>Complete Your Deposit Payment</h1>
+        <span class="hero-badge">💳 Secure <?= htmlspecialchars($payment_label) ?></span>
+        <h1><?= htmlspecialchars($payment_heading) ?></h1>
         <p>Booking #<?= $booking_id ?> • <?= htmlspecialchars($booking['company_name']) ?></p>
     </section>
 
@@ -549,7 +602,7 @@ body {
         </div>
         <div class="step-box active">
             <small>Step 2</small>
-            <strong>Deposit Payment</strong>
+            <strong><?= htmlspecialchars($payment_step) ?></strong>
         </div>
         <div class="step-box">
             <small>Step 3</small>
@@ -618,8 +671,8 @@ body {
             </div>
 
             <div class="deposit-highlight">
-                <small>Deposit Required 10%</small>
-                <h2>RM <?= number_format($deposit_amount, 2) ?></h2>
+                <small><?= $pay_type === 'balance' ? 'Remaining Balance Due' : 'Deposit Required 10%' ?></small>
+                <h2>RM <?= number_format($payment_amount, 2) ?></h2>
 
                 <div class="balance-note">
                     Remaining balance:
@@ -675,17 +728,15 @@ body {
                 <label>
                     <input type="checkbox" name="agree_terms" required>
                     <span>
-                        I agree that I am making a 10% deposit payment of 
-                        <strong>RM <?= number_format($deposit_amount, 2) ?></strong>. 
-                        The remaining balance of 
-                        <strong>RM <?= number_format($remaining_amount, 2) ?></strong> 
-                        is due before the event date.
+                        I agree that I am making <?php if ($pay_type === 'balance') { ?>the remaining balance payment of<?php } else { ?>a 10% deposit payment of<?php } ?>
+                        <strong>RM <?= number_format($payment_amount, 2) ?></strong>.
+                        <?php if ($pay_type === 'balance') { ?>This will complete the final settlement for the booking.<?php } else { ?>The remaining balance of <strong>RM <?= number_format($remaining_amount, 2) ?></strong> is due before the event date.<?php } ?>
                     </span>
                 </label>
             </div>
 
             <button type="submit" name="submit_payment" class="btn-pay">
-                💳 Proceed to Payment — RM <?= number_format($deposit_amount, 2) ?>
+                💳 Proceed to Payment — RM <?= number_format($payment_amount, 2) ?>
             </button>
 
             <div class="secure-note">
