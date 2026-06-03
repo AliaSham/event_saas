@@ -81,7 +81,7 @@ if (isset($_POST['confirm_payment'])) {
                 $stmt->bind_param("ssi", $new_filename, $bank_ref_number, $payment_id);
             } else {
                 $stmt = $conn->prepare("UPDATE payments SET bank_ref_number = ?, payment_status = 'Completed', updated_at = NOW() WHERE id = ?");
-                $stmt->bind_param("si", $payment_id);
+                $stmt->bind_param("si", $bank_ref_number, $payment_id);
             }
 
             if ($stmt->execute()) {
@@ -104,6 +104,10 @@ if (isset($_POST['confirm_payment'])) {
                 ");
 
                 $payment = mysqli_fetch_assoc($paymentQ);
+                
+                // Redirect to booking confirmation page
+                header("Location: booking_confirmation.php?booking_id=" . $payment['booking_id']);
+                exit;
             } else {
                 $error = "Error updating payment. Please try again.";
             }
