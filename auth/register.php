@@ -53,7 +53,25 @@ if (isset($_POST['register'])) {
 
     <div class="overlay"></div>
 
-    <h1 class="hello-text">hello</h1>
+    <div class="auth-left">
+
+    <h1>Plan Your<br>Perfect Event</h1>
+
+    <h3>Book Events Effortlessly</h3>
+
+    <p>
+    Explore event packages, compare vendors,
+    and manage all your bookings from a single platform.
+    </p>
+
+    <ul>
+        <li>✓ Browse Event Companies</li>
+        <li>✓ Book Packages Online</li>
+        <li>✓ Manage Bookings</li>
+        <li>✓ Track Booking Status</li>
+    </ul>
+
+</div>
 
     <div class="auth-card">
 
