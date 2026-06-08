@@ -26,6 +26,15 @@ $bookings = mysqli_query($conn, "
 
 $message = isset($_GET['msg']) ? $_GET['msg'] : '';
 $totalBookings = mysqli_num_rows($bookings);
+
+// Fetch any balance reminders for this user's bookings
+$balanceNotifsQ = mysqli_query($conn, "
+    SELECT an.* FROM admin_notifications an
+    JOIN bookings b ON an.booking_id = b.id
+    WHERE an.type = 'payment_balance_due' AND b.user_id = '$user_id' AND an.is_read = 0
+    ORDER BY an.created_at DESC
+");
+$balanceNotifsCount = ($balanceNotifsQ) ? mysqli_num_rows($balanceNotifsQ) : 0;
 ?>
 
 <!DOCTYPE html>
@@ -436,6 +445,22 @@ body {
             <h3>Live</h3>
         </div>
     </div>
+
+    <?php if ($balanceNotifsCount > 0) { ?>
+        <div class="alert-message" style="background:#fff7ed;border-color:#fcd34d;color:#92400e;">
+            <strong>⏰ You have <?= $balanceNotifsCount ?> balance reminder<?= $balanceNotifsCount > 1 ? 's' : '' ?>.</strong>
+            <div style="margin-top:8px; font-weight:600;">
+                <?php while($bn = mysqli_fetch_assoc($balanceNotifsQ)) { ?>
+                    <div style="margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; gap:12px;">
+                        <div style="flex:1;"><?= htmlspecialchars($bn['message']) ?></div>
+                        <div style="white-space:nowrap;">
+                            <a href="payment.php?booking_id=<?= intval($bn['booking_id']) ?>&pay_type=balance" class="btn-pay-now" style="padding:8px 12px;border-radius:12px;font-weight:800;background:linear-gradient(135deg,#ef4444,#f97316);color:#fff;text-decoration:none;">Pay Now</a>
+                        </div>
+                    </div>
+                <?php } ?>
+            </div>
+        </div>
+    <?php } ?>
 
     <?php if ($message == 'already_paid') { ?>
         <div class="alert-message">

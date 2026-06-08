@@ -164,6 +164,30 @@ if (isset($_POST['confirm_payment'])) {
                 }
 
                 $payment = mysqli_fetch_assoc($reloadQuery);
+
+                // Create admin notification for completed payment
+                $booking_id_for_notif = $payment['booking_id'];
+                // determine company_id from bookings table
+                $companyRow = mysqli_fetch_assoc(mysqli_query($conn, "SELECT company_id FROM bookings WHERE id = '{$booking_id_for_notif}'"));
+                $company_id_for_notif = $companyRow['company_id'] ?? null;
+
+                if ($company_id_for_notif) {
+                    if ($isHistory) {
+                        $notif_msg = "Balance payment completed by " . ($payment['email'] ?? 'Customer') . " | Amount: RM " . number_format($payment['amount'], 2) . " | Booking: #" . $booking_id_for_notif;
+                        $notif_type = 'payment_balance';
+                        $payment_ref_id = $history_id;
+                    } else {
+                        $notif_msg = "Deposit payment completed by " . ($payment['email'] ?? 'Customer') . " | Amount: RM " . number_format($payment['deposit_amount'], 2) . " | Booking: #" . $booking_id_for_notif;
+                        $notif_type = 'payment_deposit';
+                        $payment_ref_id = $payment_id;
+                    }
+
+                    $notifCheck = mysqli_query($conn, "SHOW TABLES LIKE 'admin_notifications'");
+                    if ($notifCheck && mysqli_num_rows($notifCheck) > 0) {
+                        // avoid duplicate recent reminders
+                        mysqli_query($conn, "INSERT INTO admin_notifications (type, message, company_id, booking_id, payment_id, is_read, created_at) VALUES ('" . mysqli_real_escape_string($conn, $notif_type) . "', '" . mysqli_real_escape_string($conn, $notif_msg) . "', '" . intval($company_id_for_notif) . "', '" . intval($booking_id_for_notif) . "', '" . intval($payment_ref_id) . "', 0, NOW())");
+                    }
+                }
                 header("Location: booking_confirmation.php?booking_id=" . $payment['booking_id']);
                 exit;
             } else {

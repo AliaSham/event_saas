@@ -246,6 +246,17 @@ if (isset($_POST['submit_booking'])) {
                         VALUES
                         ('".$booking_id."', '".$vendorData['vendor_id']."', '".$vendorData['price']."')
                     ");
+
+                    // Create notification for vendor
+                    $vendor_id_notif = intval($vendorData['vendor_id']);
+                    $vendor_name_q = mysqli_fetch_assoc(mysqli_query($conn, "SELECT name FROM users WHERE id = '$vendor_id_notif'"));
+                    $vendor_name = $vendor_name_q['name'] ?? 'Vendor';
+                    $vendor_msg = "New booking assigned! Booking #$booking_id | Event: " . date('M d, Y', strtotime($event_date)) . " | Price: RM " . number_format($vendorData['price'], 2);
+                    
+                    $notifCheck = mysqli_query($conn, "SHOW TABLES LIKE 'admin_notifications'");
+                    if ($notifCheck && mysqli_num_rows($notifCheck) > 0) {
+                        mysqli_query($conn, "INSERT INTO admin_notifications (type, message, booking_id, is_read, created_at) VALUES ('vendor_booking_added', '" . mysqli_real_escape_string($conn, $vendor_msg) . "', '$booking_id', 0, NOW())");
+                    }
                 }
 
                 header("Location: payment.php?booking_id=$booking_id");
