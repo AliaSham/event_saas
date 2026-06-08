@@ -87,7 +87,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     <div class="overlay"></div>
 
-    <h1 class="hello-text">hello</h1>
+    <div class="auth-left">
+
+   <h1>
+    Event<br>
+    SaaS
+    </h1>
+
+    <h3>Your Complete Event Marketplace</h3>
+
+    <p>
+    Connect customers, vendors, and event companies
+    through one platform. Book services, manage events,
+    and grow your business with ease.
+    </p>
+
+    <ul>
+
+    <li>✓ Book Event Services Easily</li>
+    <li>✓ Connect With Trusted Vendors</li>
+    <li>✓ Manage Events Efficiently</li>
+    <li>✓ Access Premium Insights</li>
+    </ul>
+
+</div>
 
     <div class="auth-card">
 

@@ -47,7 +47,7 @@ if ($company_id && isset($conn)) {
             --sidebar-text: #96a59e;
             --sidebar-active-bg: #152d22;
             --sidebar-active-text: #4ade80;
-            --body-bg: #f8f9fa;
+            --body-bg: linear-gradient(135deg,#1f5ca8,#2f80ed,#4f9df1);
             --card-bg: #ffffff;
             --text-main: #1f2937;
             --text-muted: #6b7280;
@@ -59,7 +59,7 @@ if ($company_id && isset($conn)) {
             margin: 0;
             padding: 0;
             font-family: 'Poppins', sans-serif;
-            background-color: var(--body-bg);
+            background: var(--body-bg);
             color: var(--text-main);
             display: flex;
             min-height: 100vh;
@@ -142,13 +142,19 @@ if ($company_id && isset($conn)) {
         }
 
         /* MAIN WORKSPACE STYLE */
-        .main-workspace {
-            margin-left: 260px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-        }
+ .main-workspace {
+    margin-left: 260px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+
+    min-width: 0;
+    min-height: 100vh;
+
+    background: #f8fafc;
+
+    background-attachment: fixed;
+}
 
         /* TOP NAVBAR */
         .top-navbar {
@@ -268,7 +274,14 @@ if ($company_id && isset($conn)) {
             pointer-events: auto;
         }
 
-        .content-body { padding: 28px; max-width: 1400px; width: 100%; box-sizing: border-box; }
+        .content-body {
+    padding: 28px;
+    max-width: 1400px;
+    width: 100%;
+    box-sizing: border-box;
+
+    flex: 1;
+}
 
         .page-inner-card {
             background: #ffffff;
