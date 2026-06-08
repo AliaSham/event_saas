@@ -89,7 +89,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     <div class="auth-left">
 
-   <h1>Event<br>SaaS</h1>
+   <h1>
+    Event<br>
+    SaaS
+    </h1>
 
     <h3>Your Complete Event Marketplace</h3>
 
