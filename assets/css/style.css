@@ -248,28 +248,19 @@ a {
 
     min-height:100vh;
     width:100%;
-
+    overflow:hidden;
     display:flex;
     justify-content:space-between;
     align-items:center;
-
     padding:60px 100px;
     box-sizing:border-box;
     position:relative;
-
-    background:linear-gradient(
-        135deg,
-        #0f4c81,
-        #1677ff,
-        #4aa3ff
-    );
+    background:#f8fafc;
     background-repeat:no-repeat;
     background-size:100% 100%;
-    
 }
-
 .auth-left{
-    color:white;
+    color:#111827;
     width:45%;
 
     padding-top:0;
@@ -283,7 +274,7 @@ a {
 
     margin-top:0;
     margin-bottom:25px;
-    color:white;
+    color:#111827;
     letter-spacing:-2px;
     text-shadow:
     0 5px 15px rgba(0,0,0,.15);
@@ -295,7 +286,7 @@ a {
 
     font-size:30px;
     font-weight:600;
-    color:white;
+    color:#1677ff;
     margin-bottom:25px;
     opacity:0;
     animation:fadeUp 0.8s ease .3s forwards;
@@ -305,7 +296,7 @@ a {
 .auth-left p{
     font-size:22px;
     line-height:1.8;
-    color:rgba(255,255,255,.95);
+    color:#6b7280;
     max-width:700px;
     margin-bottom:40px;
     opacity:0;
@@ -320,14 +311,17 @@ a {
 .auth-left li{
 
     list-style:none;
-    background:rgba(255,255,255,.12);
+    background:white;
     backdrop-filter:blur(10px);
     padding:18px 25px;
+    border:1px solid #e5e7eb;
     border-radius:16px;
     margin-bottom:18px;
+    box-shadow:
+    0 10px 25px rgba(0,0,0,.05);
     font-size:18px;
     font-weight:500;
-    color:white;
+    color:#111827;
     opacity:0;
     animation:fadeUp .8s ease forwards;
     transition:.3s;
@@ -1507,17 +1501,20 @@ a {
 
     position:absolute;
 
-    width:500px;
-
-    height:500px;
+    width:600px;
+    height:600px;
 
     border-radius:50%;
 
-    background:rgba(255,255,255,.06);
+    background:
+    radial-gradient(
+        circle,
+        rgba(34,197,94,.08),
+        transparent 70%
+    );
 
     bottom:-250px;
-
-    left:-150px;
+    right:-250px;
 
 }
 @media(max-width:1200px){
@@ -1566,19 +1563,20 @@ a {
 
     position:absolute;
 
-    width:400px;
-
-    height:400px;
-
-    background:rgba(255,255,255,.08);
+    width:500px;
+    height:500px;
 
     border-radius:50%;
 
-    top:-100px;
+    background:
+    radial-gradient(
+        circle,
+        rgba(22,119,255,.10),
+        transparent 70%
+    );
 
-    left:-100px;
-
-    animation:floatCircle 8s ease-in-out infinite;
+    top:-200px;
+    left:-200px;
 
 }
 @keyframes floatCircle{
@@ -1630,12 +1628,13 @@ a {
 html,
 body{
     min-height:100%;
+       background:
+    linear-gradient(
+        180deg,
+        #f8fafc,
+        #eef2f7
+    );
 }
-
 .auth-wrapper{
     min-height:100vh;
-}
-
-body{
-    background:#1677ff;
 }
