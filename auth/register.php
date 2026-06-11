@@ -55,7 +55,21 @@ if (isset($_POST['register'])) {
 
     <div class="auth-left">
 
-    <h1>Plan Your<br>Perfect Event</h1>
+<div class="brand-area">
+
+    <img src="/event_saas/assets/images/logo.png"
+         alt="Event SaaS Logo"
+         class="brand-logo">
+
+    <div class="brand-text-register">
+
+        <h2 class="page-heading">
+            Plan Your Perfect Event
+        </h2>
+
+    </div>
+
+</div>
 
     <h3>Book Events Effortlessly</h3>
 

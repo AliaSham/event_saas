@@ -89,10 +89,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     <div class="auth-left">
 
-   <h1>
-    Event<br>
-    SaaS
+   <div class="brand-area">
+
+    <img src="/event_saas/assets/images/logo.png"
+         alt="Event SaaS Logo"
+         class="brand-logo">
+
+    <h1>
+        Event<br>
+        SaaS
     </h1>
+
+</div>
 
     <h3>Your Complete Event Marketplace</h3>
 

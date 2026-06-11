@@ -55,13 +55,28 @@ if (isset($_POST['register'])) {
 
     <div class="auth-left">
 
-    <h1>Become a Vendor</h1>
+ <div class="brand-area">
+
+    <img src="/event_saas/assets/images/logo.png"
+         alt="Event SaaS Logo"
+         class="brand-logo">
+
+    <div class="brand-text-register">
+
+        <h2 class="page-heading">
+            Become a Vendor
+        </h2>
+
+    </div>
+
+</div>
 
     <h3>Grow Your Event Business</h3>
 
     <p>
-        Join Event SaaS and receive bookings
-        from event companies through our platform.
+    Join Event SaaS and connect with event companies,
+    manage bookings efficiently, and increase your
+    business opportunities through our platform.
     </p>
 
     <ul>
