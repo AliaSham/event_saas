@@ -2,7 +2,6 @@
 session_start();
 include('../../config/db.php');
 include('../../config/plan.php');
-include('../header.php');
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'admin') {
     header("Location: ../../auth/login.php");
@@ -84,6 +83,8 @@ $vendors = mysqli_query($conn, "
     AND vp.price IS NOT NULL
     ORDER BY u.name ASC
 ");
+
+include('../header.php');
 ?>
 
 <style>
