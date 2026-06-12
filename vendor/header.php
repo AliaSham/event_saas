@@ -30,11 +30,18 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'vendor') {
     box-shadow:0 4px 20px rgba(0,0,0,0.05);
     font-family:'Poppins',sans-serif;
 }
-
 .vendor-logo{
     display:flex;
     align-items:center;
-    gap:12px;
+    gap:0;
+}
+.vendor-logo-img{
+
+    width:110px;
+    height:110px;
+    object-fit:contain;
+    margin-right:-15px;
+
 }
 
 .logo-icon{
@@ -155,15 +162,17 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'vendor') {
 
 <div class="vendor-navbar">
 
-    <div class="vendor-logo">
-        <div class="logo-icon">
-            E
-        </div>
+ <div class="vendor-logo">
 
-        <div class="logo-text">
-            Event Booking
-        </div>
+    <img src="/event_saas/assets/images/logo.png"
+         alt="Event Booking Logo"
+         class="vendor-logo-img">
+
+    <div class="logo-text">
+        Event Pro Booking
     </div>
+
+</div>
 
     <div class="vendor-menu">
 
