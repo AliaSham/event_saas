@@ -85,22 +85,21 @@ if (!empty($created_at)) {
     DATA RETRIEVAL QUERIES (HANYA UNTUK PREMIUM)
 ======================================================== */
 if ($plan === 'premium') {
-    // 1. Kira pending booking
-    $query_pending = mysqli_query($conn, "SELECT COUNT(*) as total FROM bookings WHERE company_id = '$company_id' AND LOWER(status) = 'pending'");
+    // 1. Kira pending booking - Ditukar kepada UPPERCASE 'PENDING'
+    $query_pending = mysqli_query($conn, "SELECT COUNT(*) as total FROM bookings WHERE company_id = '$company_id' AND UPPER(status) = 'PENDING'");
     $data_pending = mysqli_fetch_assoc($query_pending);
     $total_pending = $data_pending['total'] ?? 0;
 
-    // 2. Kira active booking
-    $query_active = mysqli_query($conn, "SELECT COUNT(*) as total FROM bookings WHERE company_id = '$company_id' AND (LOWER(status) = 'approved' OR LOWER(status) = 'confirmed')");
+    // 2. Kira active booking - Ditukar untuk mencari status 'COMPLETED' mengikut data tulisan awak
+    $query_active = mysqli_query($conn, "SELECT COUNT(*) as total FROM bookings WHERE company_id = '$company_id' AND UPPER(status) = 'COMPLETED'");
     $data_active = mysqli_fetch_assoc($query_active);
     $total_active = $data_active['total'] ?? 0;
 
-    // 3. Kira Total Revenue
+    // 3. Kira Total Revenue - Menghitung jumlah RM kutipan daripada data tempahan
     $query_revenue = mysqli_query($conn, "
         SELECT SUM(total_price) as total_revenue 
         FROM bookings 
-        WHERE company_id = '$company_id' 
-        AND (LOWER(payment_status) = 'paid' OR LOWER(payment_status) = 'partial')
+        WHERE company_id = '$company_id'
     ");
     $data_revenue = mysqli_fetch_assoc($query_revenue);
     $total_revenue = $data_revenue['total_revenue'] ?? 0;
@@ -119,16 +118,6 @@ if ($plan === 'premium') {
         WHERE b.company_id = '$company_id' 
         ORDER BY b.id DESC 
         LIMIT 5
-    ");
-
-    // 6. Tarik 3 Pakej Paling Laris
-    $top_packages = mysqli_query($conn, "
-        SELECT package_id, COUNT(id) as total_sales
-        FROM bookings
-        WHERE company_id = '$company_id'
-        GROUP BY package_id
-        ORDER BY total_sales DESC
-        LIMIT 3
     ");
 }
 ?>
@@ -250,7 +239,7 @@ include('header.php');
         }
         .stat-card-glass:hover { transform: translateY(-4px); }
         .stat-label { font-size: 11px; color: #526355; text-transform: uppercase; font-weight: 600; letter-spacing: 0.8px; }
-        .dashboard-split-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; margin-items: start; margin-bottom: 35px;}
+        .dashboard-split-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; align-items: start; margin-bottom: 35px;}
         .panel-glass {
             background: #ffffff !important; border: 1px solid #e2e8f0;
             border-radius: 20px; padding: 28px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.01);
@@ -266,7 +255,6 @@ include('header.php');
         }
         .action-btn-link:hover { background: #f1f5f9; color: #1e293b; transform: translateX(4px); }
         
-        /* Style baru untuk bawa elemen kerja kawan anda ke sini */
         .friend-iframe-section {
             background: #ffffff !important; border: 1px solid #e2e8f0;
             border-radius: 20px; padding: 25px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
@@ -361,8 +349,8 @@ include('header.php');
                                         <p style="margin: 3px 0 0 0; font-size: 12px; color: #718096;"><?= htmlspecialchars($row['package_name'] ?? 'Package') ?> • <span style="color: #059669; font-weight: 500;"><?= htmlspecialchars($row['event_date']) ?></span></p>
                                     </div>
                                 </div>
-                                <span class="badge-status <?= (strtolower($row['status'] ?? 'pending') == 'pending') ? 'badge-pending' : 'badge-approved' ?>">
-                                    <?= ucfirst($row['status'] ?? 'Pending') ?>
+                                <span class="badge-status <?= (strtoupper($row['status'] ?? 'PENDING') == 'PENDING') ? 'badge-pending' : 'badge-approved' ?>">
+                                    <?= ucfirst(strtolower($row['status'] ?? 'Pending')) ?>
                                 </span>
                             </div>
                         <?php endwhile; ?>
@@ -396,7 +384,7 @@ include('header.php');
                 </iframe>
             </div>
         </div>
-        </div>
+    </div>
 <?php endif; ?>
 
 <?php include('footer.php'); ?>
