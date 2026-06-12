@@ -444,17 +444,18 @@ include('header.php');
     font-family: 'Poppins', sans-serif;
 }
 
+/* PREMIUM HERO GREEN THEME */
 .premium-hero {
     background:
-        radial-gradient(circle at 85% 15%, rgba(250,204,21,.26), transparent 25%),
+        radial-gradient(circle at 85% 15%, rgba(34,197,94,.20), transparent 25%),
         radial-gradient(circle at 10% 90%, rgba(16,185,129,.28), transparent 28%),
-        radial-gradient(circle at 55% 10%, rgba(139,92,246,.42), transparent 30%),
-        linear-gradient(135deg, #020617 0%, #0f172a 48%, #2e1065 100%);
+        radial-gradient(circle at 55% 10%, rgba(74,222,128,.18), transparent 30%),
+        linear-gradient(135deg, #001b12 0%, #022c22 45%, #064e3b 100%);
     color: white;
     border-radius: 34px;
     padding: 38px;
     margin-bottom: 26px;
-    box-shadow: 0 32px 90px rgba(15,23,42,.35);
+    box-shadow: 0 32px 90px rgba(6,95,70,.35);
     position: relative;
     overflow: hidden;
 }
@@ -468,6 +469,18 @@ include('header.php');
         linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px);
     background-size: 42px 42px;
     opacity: .32;
+}
+
+.premium-hero::after {
+    content: "";
+    position: absolute;
+    width: 260px;
+    height: 260px;
+    right: -80px;
+    bottom: -110px;
+    border-radius: 50%;
+    background: rgba(34,197,94,.18);
+    filter: blur(4px);
 }
 
 .premium-hero-content {
@@ -485,13 +498,14 @@ include('header.php');
     gap: 9px;
     width: fit-content;
     background: rgba(255,255,255,.13);
-    border: 1px solid rgba(255,255,255,.25);
+    border: 1px solid rgba(187,247,208,.35);
     padding: 9px 16px;
     border-radius: 999px;
     font-size: 11px;
     font-weight: 900;
-    color: #fde68a;
+    color: #bbf7d0;
     margin-bottom: 18px;
+    box-shadow: 0 0 24px rgba(34,197,94,.18);
 }
 
 .premium-hero h2 {
@@ -500,26 +514,29 @@ include('header.php');
     line-height: 1.08;
     font-weight: 950;
     letter-spacing: -1px;
+    color: #ffffff;
+    text-shadow: 0 3px 18px rgba(0,0,0,.24);
 }
 
 .premium-hero p {
     margin: 0;
     max-width: 720px;
-    color: #cbd5e1;
+    color: #d1fae5;
     font-size: 14px;
     line-height: 1.8;
 }
 
 .hero-revenue-card {
     background: rgba(255,255,255,.12);
-    border: 1px solid rgba(255,255,255,.20);
+    border: 1px solid rgba(187,247,208,.28);
     border-radius: 26px;
     padding: 24px;
     backdrop-filter: blur(14px);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.12);
 }
 
 .hero-revenue-card span {
-    color: #cbd5e1;
+    color: #d1fae5;
     font-size: 12px;
     font-weight: 800;
     text-transform: uppercase;
@@ -528,7 +545,7 @@ include('header.php');
 .hero-revenue-card strong {
     display: block;
     margin-top: 10px;
-    color: #facc15;
+    color: #86efac;
     font-size: 30px;
     font-weight: 950;
 }
@@ -577,7 +594,7 @@ include('header.php');
     right: -48px;
     top: -48px;
     border-radius: 50%;
-    background: rgba(139,92,246,.12);
+    background: rgba(34,197,94,.12);
 }
 
 .stat-icon {
@@ -593,8 +610,8 @@ include('header.php');
 
 .bg-orange { background: linear-gradient(135deg, #f97316, #dc2626); }
 .bg-green { background: linear-gradient(135deg, #10b981, #047857); }
-.bg-purple { background: linear-gradient(135deg, #8b5cf6, #4c1d95); }
-.bg-gold { background: linear-gradient(135deg, #facc15, #f97316); }
+.bg-purple { background: linear-gradient(135deg, #22c55e, #064e3b); }
+.bg-gold { background: linear-gradient(135deg, #84cc16, #059669); }
 
 .premium-stat-card span {
     display: block;
@@ -663,8 +680,8 @@ include('header.php');
     border-radius: 16px;
     display: grid;
     place-items: center;
-    background: linear-gradient(135deg, #ede9fe, #dcfce7);
-    color: #7c3aed;
+    background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+    color: #047857;
 }
 
 .booking-item h4 {
@@ -723,21 +740,21 @@ include('header.php');
 
 .action-btn-link:hover {
     transform: translateX(6px);
-    background: #f5f3ff;
-    color: #6d28d9;
-    border-color: #c4b5fd;
+    background: #ecfdf5;
+    color: #047857;
+    border-color: #86efac;
 }
 
 .premium-sub-box {
     margin-top: 18px;
     background:
-        radial-gradient(circle at top right, rgba(250,204,21,.28), transparent 34%),
-        radial-gradient(circle at bottom left, rgba(139,92,246,.38), transparent 35%),
-        linear-gradient(135deg, #020617, #1e1b4b);
+        radial-gradient(circle at top right, rgba(34,197,94,.25), transparent 34%),
+        radial-gradient(circle at bottom left, rgba(16,185,129,.30), transparent 35%),
+        linear-gradient(135deg, #001b12, #064e3b);
     color: white;
     border-radius: 24px;
     padding: 23px;
-    box-shadow: 0 22px 55px rgba(15,23,42,.26);
+    box-shadow: 0 22px 55px rgba(6,95,70,.26);
 }
 
 .premium-sub-box h4 {
@@ -749,25 +766,29 @@ include('header.php');
 .premium-sub-box p {
     margin: 8px 0;
     font-size: 12px;
-    color: #cbd5e1;
+    color: #d1fae5;
 }
 
 .premium-sub-box b {
-    color: #facc15;
+    color: #86efac;
 }
 
 .premium-sub-action-btn {
     display: block;
     margin-top: 16px;
     text-align: center;
-    background: linear-gradient(135deg, #facc15, #f97316);
-    color: #111827;
+    background: linear-gradient(135deg, #22c55e, #059669);
+    color: #ffffff;
     padding: 12px;
     border-radius: 15px;
     text-decoration: none;
     font-size: 13px;
     font-weight: 950;
-    box-shadow: 0 16px 35px rgba(250,204,21,.28);
+    box-shadow: 0 16px 35px rgba(34,197,94,.28);
+}
+
+.premium-sub-action-btn:hover {
+    background: linear-gradient(135deg, #16a34a, #047857);
 }
 
 .analytics-box {
@@ -864,7 +885,7 @@ include('header.php');
     <div class="premium-layout">
         <div class="premium-panel">
             <h3 class="panel-title">
-                <i class="fa-solid fa-list-check" style="color:#7c3aed;"></i>
+                <i class="fa-solid fa-list-check" style="color:#059669;"></i>
                 Premium Booking Activity Pipeline
             </h3>
 
@@ -900,7 +921,7 @@ include('header.php');
 
         <div class="premium-panel">
             <h3 class="panel-title">
-                <i class="fa-solid fa-bolt" style="color:#f97316;"></i>
+                <i class="fa-solid fa-bolt" style="color:#059669;"></i>
                 Premium Control Panel
             </h3>
 
@@ -940,7 +961,7 @@ include('header.php');
 
     <div class="analytics-box">
         <h3 class="panel-title" style="margin-bottom:15px;">
-            <i class="fa-solid fa-chart-pie" style="color:#7c3aed;"></i>
+            <i class="fa-solid fa-chart-pie" style="color:#059669;"></i>
             Executive Business Intelligence Analytics
         </h3>
 
