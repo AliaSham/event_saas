@@ -4,7 +4,8 @@
         <!-- Bahagian Kiri: Info Jenama -->
         <div class="footer-brand-section">
             <div class="footer-logo">
-                <span class="logo-icon">❖</span> 
+                <!-- Logo PNG sistem dengan latar belakang putih yang baru dikemas kini -->
+                <img src="/event_saas/assets/images/logo.png" alt="Event SaaS Logo" class="footer-logo-img"> 
                 <strong>Event Pro</strong>
             </div>
             <p class="footer-desc">
@@ -84,10 +85,21 @@
         color: #ffffff; 
         display: flex; 
         align-items: center; 
-        gap: 10px; 
+        gap: 12px; 
         margin-bottom: 15px; 
     }
-    .logo-icon { color: #a78bfa; font-size: 24px; }
+    
+    /* 🔥 DIUBAH: Ditambah background putih, padding, dan border-radius supaya logo gelap kelihatan jelas */
+    .footer-logo-img {
+        height: 35px;
+        width: auto;
+        background-color: #ffffff;
+        padding: 6px;
+        border-radius: 8px; /* Membuat bucu kotak putih sedikit melengkung supaya moden */
+        object-fit: contain;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Efek bayang halus */
+    }
+
     .footer-desc { font-size: 14px; line-height: 1.6; color: #94a3b8; }
     .footer-links-grid { 
         display: flex; 
