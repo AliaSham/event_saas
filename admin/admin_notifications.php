@@ -55,6 +55,9 @@ $unreadCount = mysqli_fetch_assoc(mysqli_query($conn, "
     SELECT COUNT(*) AS count FROM admin_notifications WHERE is_read = 0 AND company_id = '$company_id'
 "))['count'] ?? 0;
 
+// Sediakan juga variable $unread_count (huruf kecil & underscore) jika fail header.php anda menggunakannya
+$unread_count = $unreadCount; 
+
 // Kira jumlah keseluruhan khas untuk syarikat ini
 $totalCount = mysqli_fetch_assoc(mysqli_query($conn, "
     SELECT COUNT(*) AS count FROM admin_notifications WHERE company_id = '$company_id'
@@ -69,170 +72,7 @@ $totalCount = mysqli_fetch_assoc(mysqli_query($conn, "
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
 <style>
-* {
-    box-sizing: border-box;
-}
-
-body {
-    margin: 0;
-    font-family: 'Poppins', sans-serif;
-    background: #f4f7fb;
-    color: #0f172a;
-    display: flex;
-    min-height: 100vh;
-}
-
-/* SIDEBAR */
-.sidebar {
-    width: 260px;
-    background: linear-gradient(180deg, #061b12, #0b2619);
-    color: white;
-    position: fixed;
-    inset: 0 auto 0 0;
-    padding: 28px 20px;
-    z-index: 10;
-}
-
-.sidebar-brand {
-    font-size: 22px;
-    font-weight: 900;
-    margin-bottom: 40px;
-}
-
-.sidebar-brand span {
-    color: #22c55e;
-}
-
-.menu-section-label {
-    font-size: 11px;
-    letter-spacing: 1.5px;
-    color: #64748b;
-    text-transform: uppercase;
-    margin: 25px 0 12px;
-}
-
-.sidebar-menu {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.sidebar-menu li a {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    padding: 13px 15px;
-    color: #cbd5e1;
-    text-decoration: none;
-    border-radius: 14px;
-    font-size: 14px;
-    margin-bottom: 7px;
-    transition: .2s ease;
-}
-
-.sidebar-menu li a:hover,
-.sidebar-menu li.active-page a {
-    background: rgba(34,197,94,.16);
-    color: #4ade80;
-}
-
-.sidebar-footer {
-    position: absolute;
-    bottom: 25px;
-    left: 20px;
-    right: 20px;
-    border-top: 1px solid rgba(255,255,255,.08);
-    padding-top: 18px;
-    color: #94a3b8;
-    font-size: 13px;
-}
-
-/* MAIN */
-.main-workspace {
-    margin-left: 260px;
-    width: calc(100% - 260px);
-}
-
-.top-navbar {
-    height: 72px;
-    background: rgba(255,255,255,.85);
-    backdrop-filter: blur(18px);
-    border-bottom: 1px solid #e5e7eb;
-    padding: 0 32px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 8;
-}
-
-.brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-weight: 900;
-    color: #0f172a;
-    text-decoration: none;
-}
-
-.logo {
-    width: 42px;
-    height: 42px;
-    border-radius: 15px;
-    display: grid;
-    place-items: center;
-    background: linear-gradient(135deg, #22c55e, #16a34a);
-    color: white;
-    font-weight: 900;
-}
-
-.top-navbar-right {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-}
-
-.nav-icon {
-    width: 42px;
-    height: 42px;
-    display: grid;
-    place-items: center;
-    background: #ecfdf5;
-    border: 1px solid #bbf7d0;
-    border-radius: 15px;
-    text-decoration: none;
-}
-
-/* BADGE MERAH UNTUK BILANGAN NOTIFIKASI */
-.notification-badge {
-    position: absolute;
-    top: -4px;
-    right: -4px;
-    background: #ef4444;
-    color: white;
-    font-size: 11px;
-    font-weight: 700;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid white;
-    box-shadow: 0 2px 5px rgba(239, 68, 68, 0.4);
-}
-
-.user-name {
-    font-size: 14px;
-    font-weight: 800;
-}
-
-/* CONTENT */
-.content-body {
-    padding: 38px;
-}
-
+/* KANDUNGAN NOTIFIKASI */
 .notification-hero {
     position: relative;
     overflow: hidden;
@@ -255,6 +95,39 @@ body {
     height: 320px;
     border-radius: 50%;
     background: rgba(255,255,255,.12);
+}
+
+.hero-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.hero-stats {
+    display: flex;
+    gap: 15px;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 20px 25px;
+    border-radius: 20px;
+    text-align: center;
+    min-width: 130px;
+}
+
+.stat-card h2 {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 800;
+}
+
+.stat-card span {
+    font-size: 12px;
+    opacity: 0.8;
 }
 
 /* CONTROL PANEL */
@@ -417,23 +290,6 @@ button,
 }
 
 @media(max-width: 900px) {
-    .sidebar {
-        width: 78px;
-        padding: 25px 10px;
-    }
-
-    .sidebar-brand span,
-    .sidebar-menu span,
-    .menu-section-label,
-    .sidebar-footer {
-        display: none;
-    }
-
-    .main-workspace {
-        margin-left: 78px;
-        width: calc(100% - 78px);
-    }
-
     .hero-content,
     .control-panel {
         flex-direction: column;
@@ -454,78 +310,12 @@ button,
 }
 </style>
 </head>
-
 <body>
 
 <?php 
-$current_file = basename($_SERVER['PHP_SELF']); 
-$current_dir  = basename(dirname($_SERVER['PHP_SELF']));
+// Memanggil header selepas data perkiraan unread selesai diproses di atas
+include('header.php'); 
 ?>
-
-<aside class="sidebar">
-    <div class="sidebar-brand">⚡ <span>SaaS</span> Admin</div>
-
-    <div class="menu-section-label">Menu</div>
-    <ul class="sidebar-menu">
-        <li class="<?= ($current_file == 'dashboard.php') ? 'active-page' : '' ?>">
-            <a href="/event_saas/admin/dashboard.php">📊 <span>Dashboard</span></a>
-        </li>
-        <li class="<?= ($current_file == 'company_profile.php') ? 'active-page' : '' ?>">
-            <a href="/event_saas/admin/company_profile.php">🏢 <span>Company Profile</span></a>
-        </li>
-        <li class="<?= ($current_dir == 'category') ? 'active-page' : '' ?>">
-            <a href="/event_saas/admin/category/index.php">📂 <span>Category</span></a>
-        </li>
-        <li class="<?= ($current_dir == 'package') ? 'active-page' : '' ?>">
-            <a href="/event_saas/admin/package/index.php">📖 <span>Package</span></a>
-        </li>
-        <li class="<?= ($current_dir == 'calendar') ? 'active-page' : '' ?>">
-            <a href="/event_saas/admin/calendar/index.php">📅 <span>Calendar</span></a>
-        </li>
-        <li class="<?= ($current_dir == 'vendors') ? 'active-page' : '' ?>">
-            <a href="/event_saas/admin/vendors/index.php">🤝 <span>Vendors</span></a>
-        </li>
-        <li class="<?= ($current_dir == 'bookings') ? 'active-page' : '' ?>">
-            <a href="/event_saas/admin/bookings/index.php">📋 <span>Bookings</span></a>
-        </li>
-    </ul>
-
-    <div class="menu-section-label">General</div>
-    <ul class="sidebar-menu">
-        <li class="<?= ($current_file == 'payment_management.php') ? 'active-page' : '' ?>">
-            <a href="/event_saas/admin/payment_management.php">💳 <span>Payments</span></a>
-        </li>
-        <li class="<?= ($current_file == 'admin_notifications.php') ? 'active-page' : '' ?>">
-            <a href="/event_saas/admin/admin_notifications.php">🔔 <span>Notifications</span></a>
-        </li>
-        <?php if ($current_plan == 'premium' || $current_file == 'premium_dashboard.php'): ?>
-        <li class="<?= ($current_file == 'premium_dashboard.php') ? 'active-page' : '' ?>">
-            <a href="/event_saas/admin/premium_dashboard.php">📈 <span>Premium Intel</span></a>
-        </li>
-        <?php endif; ?>
-    </ul>
-
-    <div class="sidebar-footer">Active Session</div>
-</aside>
-
-<main class="main-workspace">
-
-<header class="top-navbar">
-    <a href="/event_saas/admin/dashboard.php" class="brand">
-        <div class="logo">S</div>
-        <div>SaaSAdmin</div>
-    </a>
-
-    <div class="top-navbar-right">
-        <a href="/event_saas/admin/admin_notifications.php" class="nav-icon" style="position: relative;">
-            🔔
-            <?php if ($unreadCount > 0): ?>
-                <span class="notification-badge"><?= $unreadCount ?></span>
-            <?php endif; ?>
-        </a>
-        <div class="user-name"><?= htmlspecialchars($_SESSION['user_name'] ?? 'Admin') ?></div>
-    </div>
-</header>
 
 <div class="content-body">
 
@@ -626,6 +416,5 @@ $current_dir  = basename(dirname($_SERVER['PHP_SELF']));
 
 </div>
 
-</main>
 </body>
 </html>

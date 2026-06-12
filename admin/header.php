@@ -5,13 +5,11 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // Memastikan fail sambungan database dimuatkan dengan betul
-// Jika fail ini diletakkan di dalam subfolder yang dalam, pastikan path ini tepat
 if (file_exists('../config/db.php')) {
     include('../config/db.php');
 } elseif (file_exists('../../config/db.php')) {
     include('../../config/db.php');
 } else {
-    // Alternatif jika diletakkan secara mutlak dari root folder XAMPP
     include($_SERVER['DOCUMENT_ROOT'] . '/event_saas/config/db.php');
 }
 
@@ -31,6 +29,13 @@ if ($company_id && isset($conn)) {
         $planData = mysqli_fetch_assoc($planQuery);
         $current_plan = strtolower($planData['plan'] ?? 'standard');
     }
+
+    // [KEMAS KINI] Kira jumlah unread notifications untuk diletakkan pada badge loceng secara global
+    $globalUnreadQ = mysqli_query($conn, "SELECT COUNT(*) AS count FROM admin_notifications WHERE is_read = 0 AND company_id = '$company_id'");
+    $globalUnreadData = mysqli_fetch_assoc($globalUnreadQ);
+    $headerUnreadCount = $globalUnreadData['count'] ?? 0;
+} else {
+    $headerUnreadCount = 0;
 }
 ?>
 <!DOCTYPE html>
@@ -82,21 +87,19 @@ if ($company_id && isset($conn)) {
         }
 
         .sidebar-brand {
-    font-size: 20px;
-    font-weight: 600;
-    margin-bottom: 35px;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 35px;
+            display: flex;
+            align-items: center;
+            gap: 0px;
+        }
 
-    display: flex;
-    align-items: center;
-
-    gap: 0px;
-}
-
-.sidebar-logo {
-    width: 90px;
-    height: 90px;
-    object-fit: contain;
-}
+        .sidebar-logo {
+            width: 90px;
+            height: 90px;
+            object-fit: contain;
+        }
 
         .sidebar-brand span { color: var(--primary-color); }
 
@@ -150,19 +153,16 @@ if ($company_id && isset($conn)) {
         }
 
         /* MAIN WORKSPACE STYLE */
- .main-workspace {
-    margin-left: 260px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-
-    min-width: 0;
-    min-height: 100vh;
-
-    background: #f8fafc;
-
-    background-attachment: fixed;
-}
+        .main-workspace {
+            margin-left: 260px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            min-height: 100vh;
+            background: #f8fafc;
+            background-attachment: fixed;
+        }
 
         /* TOP NAVBAR */
         .top-navbar {
@@ -205,7 +205,6 @@ if ($company_id && isset($conn)) {
         }
 
         .top-navbar-left { display: flex; align-items: center; gap: 16px; }
-
         .top-navbar-right { display: flex; align-items: center; gap: 12px; }
 
         .nav-icon {
@@ -219,9 +218,29 @@ if ($company_id && isset($conn)) {
             background: #f0faf4 !important;
             border: 1px solid #d1f0de !important;
             text-decoration: none;
+            position: relative; /* Ditambah untuk kedudukan badge */
             transition: background 0.15s ease, transform 0.12s ease;
         }
         .nav-icon:hover { background: #dcf5e7 !important; transform: translateY(-2px); }
+
+        /* [KEMAS KINI] Style untuk badge merah bilangan notifikasi unread */
+        .badge-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #ef4444;
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
 
         .admin-role-badge {
             background-color: #f0faf4 !important;
@@ -283,13 +302,12 @@ if ($company_id && isset($conn)) {
         }
 
         .content-body {
-    padding: 28px;
-    max-width: 1400px;
-    width: 100%;
-    box-sizing: border-box;
-
-    flex: 1;
-}
+            padding: 28px;
+            max-width: 1400px;
+            width: 100%;
+            box-sizing: border-box;
+            flex: 1;
+        }
 
         .page-inner-card {
             background: #ffffff;
@@ -317,14 +335,9 @@ $current_dir  = basename(dirname($_SERVER['PHP_SELF']));
 
 <aside class="sidebar">
     <div class="sidebar-brand">
-
-    <img src="/event_saas/assets/images/logo2.png"
-         alt="Event Pro Logo"
-         class="sidebar-logo">
-
-    <span>Event</span>Pro
-
-</div>
+        <img src="/event_saas/assets/images/logo2.png" alt="Event Pro Logo" class="sidebar-logo">
+        <span>Event</span>Pro
+    </div>
     <div class="menu-section-label">Menu</div>
     <ul class="sidebar-menu">
         <li class="<?= ($current_file == 'dashboard.php' || $current_file == 'index.php' && $current_dir == 'admin') ? 'active-page' : '' ?>">
@@ -377,7 +390,12 @@ $current_dir  = basename(dirname($_SERVER['PHP_SELF']));
         </div>
 
         <div class="top-navbar-right">
-            <a href="/event_saas/admin/admin_notifications.php" class="nav-icon" title="Notifications">🔔</a>
+            <a href="/event_saas/admin/admin_notifications.php" class="nav-icon" title="Notifications">
+                🔔
+                <?php if ($headerUnreadCount > 0): ?>
+                    <span class="badge-count"><?= $headerUnreadCount ?></span>
+                <?php endif; ?>
+            </a>
 
             <div class="user-menu">
                 <div class="user-name"><?= htmlspecialchars(($_SESSION['user_name'] ?? $_SESSION['user_email'] ?? 'Admin')) ?></div>
