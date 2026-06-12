@@ -149,5 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 </div>
 
+<?php include('footer_auth.php'); ?>
+
 </body>
 </html>

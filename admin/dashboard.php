@@ -73,27 +73,33 @@ if (!empty($created_at)) {
     }
 }
 
+// AMBIL DATA REVENUE (Dikira untuk semua pelan supaya pemampatan data konsisten)
+$query_revenue = mysqli_query($conn, "
+    SELECT SUM(total_price) as total_revenue 
+    FROM bookings 
+    WHERE company_id = '$company_id'
+");
+$data_revenue = mysqli_fetch_assoc($query_revenue);
+$total_revenue = $data_revenue['total_revenue'] ?? 0;
+
+/* 📊 PERBAIKAN SQL STATUS: Menyesuaikan status mengikut standard database */
 if ($plan === 'premium') {
+    // Kira Pending Bookings
     $query_pending = mysqli_query($conn, "SELECT COUNT(*) as total FROM bookings WHERE company_id = '$company_id' AND UPPER(status) = 'PENDING'");
     $data_pending = mysqli_fetch_assoc($query_pending);
     $total_pending = $data_pending['total'] ?? 0;
 
-    $query_active = mysqli_query($conn, "SELECT COUNT(*) as total FROM bookings WHERE company_id = '$company_id' AND UPPER(status) = 'COMPLETED'");
+    // 🔥 DIUBAH: Mengira status APPROVED atau COMPLETED sebagai Active Events supaya tidak keluar 0
+    $query_active = mysqli_query($conn, "SELECT COUNT(*) as total FROM bookings WHERE company_id = '$company_id' AND (UPPER(status) = 'COMPLETED' OR UPPER(status) = 'APPROVED' OR UPPER(status) = 'PAID')");
     $data_active = mysqli_fetch_assoc($query_active);
     $total_active = $data_active['total'] ?? 0;
 
-    $query_revenue = mysqli_query($conn, "
-        SELECT SUM(total_price) as total_revenue 
-        FROM bookings 
-        WHERE company_id = '$company_id'
-    ");
-    $data_revenue = mysqli_fetch_assoc($query_revenue);
-    $total_revenue = $data_revenue['total_revenue'] ?? 0;
-
+    // Kira Jumlah Packages
     $query_packages_count = mysqli_query($conn, "SELECT COUNT(*) as total FROM packages WHERE company_id = '$company_id'");
     $data_packages_count = mysqli_fetch_assoc($query_packages_count);
     $total_packages = $data_packages_count['total'] ?? 0;
 
+    // Ambil 5 Tempahan Terbaru
     $recent_bookings = mysqli_query($conn, "
         SELECT b.*, p.package_name, u.name as customer_name 
         FROM bookings b
@@ -307,21 +313,6 @@ include('header.php');
     text-align: center;
 }
 
-.locked-note {
-    background: #f8fafc;
-    border: 1px dashed #cbd5e1;
-    border-radius: 18px;
-    padding: 20px;
-    margin-top: 24px;
-    color: #64748b;
-    font-size: 13px;
-    line-height: 1.7;
-}
-
-.locked-note b {
-    color: #7c3aed;
-}
-
 @media (max-width: 900px) {
     .standard-summary {
         grid-template-columns: 1fr;
@@ -428,11 +419,7 @@ include('header.php');
 
     </div>
 
-    <div class="locked-note">
-        <b>Premium features are not included in this dashboard.</b>
-        Live business analytics, revenue intelligence, recent booking pipeline and advanced insights are only available in the Premium package.
     </div>
-</div>
 
 <?php else: ?>
 
