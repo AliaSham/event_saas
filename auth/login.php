@@ -83,62 +83,71 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 <body style="display: flex; flex-direction: column; min-height: 100vh; margin: 0;">
 
-<div class="auth-main-content" style="flex: 1;">
-    <div class="auth-wrapper">
+<div class="auth-wrapper">
 
-        <div class="overlay"></div>
+    <div class="overlay"></div>
 
-        <div class="auth-left">
-            <div class="brand-area">
-                <img src="/event_saas/assets/images/logo.png"
-                     alt="Event SaaS Logo"
-                     class="brand-logo">
-                <h1>
-                    Event<br>
-                    SaaS
-                </h1>
-            </div>
+    <div class="auth-left">
 
-            <h3>Your Complete Event Marketplace</h3>
+   <div class="brand-area">
 
-            <p>
-            Connect customers, vendors, and event companies
-            through one platform. Book services, manage events,
-            and grow your business with ease.
-            </p>
+    <img src="/event_saas/assets/images/logo.png"
+         alt="Event SaaS Logo"
+         class="brand-logo">
 
-            <ul>
-                <li>✓ Book Event Services Easily</li>
-                <li>✓ Connect With Trusted Vendors</li>
-                <li>✓ Manage Events Efficiently</li>
-                <li>✓ Access Premium Insights</li>
-            </ul>
-        </div>
-
-        <div class="auth-card">
-            <h2 class="auth-title">Welcome Back</h2>
-            <p class="auth-sub">Login to your account</p>
-
-            <?php if ($error != "") { ?>
-                <div class="alert error"><?php echo $error; ?></div>
-            <?php } ?>
-
-            <form method="POST">
-                <input type="email" name="email" placeholder="Enter Email" required>
-                <input type="password" name="password" placeholder="Enter Password" required>
-                <button class="btn btn-primary">Login</button>
-            </form>
-
-            <p class="auth-link">
-                Don't have an account?
-                <a href="register.php">Register</a>
-            </p>
-        </div>
-
+    <div class="brand-text">
+        <h1>
+            Event<br>
+            Pro
+        </h1>
     </div>
+
 </div>
 
-<?php include('footer_auth.php'); ?>
+    <h3>Your Complete Event Marketplace</h3>
+
+    <p>
+    Connect customers, vendors, and event companies
+    through one platform. Book services, manage events,
+    and grow your business with ease.
+    </p>
+
+    <ul>
+
+    <li>✓ Book Event Services Easily</li>
+    <li>✓ Connect With Trusted Vendors</li>
+    <li>✓ Manage Events Efficiently</li>
+    <li>✓ Access Premium Insights</li>
+    </ul>
+
+</div>
+
+    <div class="auth-card">
+
+        <h2 class="auth-title">Welcome Back</h2>
+        <p class="auth-sub">Login to your account</p>
+
+        <?php if ($error != "") { ?>
+            <div class="alert error"><?php echo $error; ?></div>
+        <?php } ?>
+
+        <form method="POST">
+
+            <input type="email" name="email" placeholder="Enter Email" required>
+            <input type="password" name="password" placeholder="Enter Password" required>
+
+            <button class="btn btn-primary">Login</button>
+
+        </form>
+
+        <p class="auth-link">
+            Don't have an account?
+            <a href="register.php">Register</a>
+        </p>
+
+    </div>
+
+</div>
 
 </body>
 </html>
