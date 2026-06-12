@@ -57,6 +57,7 @@ if (!$companyData || $companyData['subscription_status'] !== 'Active') {
 ======================================================== */
 $expiry_alert_message = "";
 $days_left = null;
+$formatted_expiry = "N/A";
 
 if (!empty($created_at)) {
     $today = new DateTime();
@@ -85,17 +86,17 @@ if (!empty($created_at)) {
     DATA RETRIEVAL QUERIES (HANYA UNTUK PREMIUM)
 ======================================================== */
 if ($plan === 'premium') {
-    // 1. Kira pending booking - Ditukar kepada UPPERCASE 'PENDING'
+    // 1. Kira pending booking 
     $query_pending = mysqli_query($conn, "SELECT COUNT(*) as total FROM bookings WHERE company_id = '$company_id' AND UPPER(status) = 'PENDING'");
     $data_pending = mysqli_fetch_assoc($query_pending);
     $total_pending = $data_pending['total'] ?? 0;
 
-    // 2. Kira active booking - Ditukar untuk mencari status 'COMPLETED' mengikut data tulisan awak
+    // 2. Kira active booking
     $query_active = mysqli_query($conn, "SELECT COUNT(*) as total FROM bookings WHERE company_id = '$company_id' AND UPPER(status) = 'COMPLETED'");
     $data_active = mysqli_fetch_assoc($query_active);
     $total_active = $data_active['total'] ?? 0;
 
-    // 3. Kira Total Revenue - Menghitung jumlah RM kutipan daripada data tempahan
+    // 3. Kira Total Revenue
     $query_revenue = mysqli_query($conn, "
         SELECT SUM(total_price) as total_revenue 
         FROM bookings 
@@ -126,6 +127,8 @@ if ($plan === 'premium') {
 // Panggil header utama di paling atas supaya sidebar sentiasa kekal ada
 include('header.php'); 
 ?>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <?php if ($plan === 'basic' || $plan === 'standard'): ?>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
@@ -168,6 +171,21 @@ include('header.php');
             flex-direction: column;
             justify-content: space-between;
         }
+        /* Gaya Kad Langganan Khas */
+        .subscription-card-status {
+            background: linear-gradient(135deg, #1e293b, #0f172a) !important;
+            color: #ffffff !important;
+            border: none !important;
+        }
+        .subscription-card-status h3 { color: #ffffff !important; }
+        .sub-meta { font-size: 13px; color: #cbd5e1; margin-bottom: 5px; }
+        .sub-meta b { color: #38bdf8; }
+        .sub-btn-group { display: flex; gap: 8px; margin-top: 15px; }
+        .btn-sub-action { flex: 1; text-align: center; padding: 10px; font-size: 12px; font-weight: 600; border-radius: 8px; text-decoration: none; transition: 0.2s; }
+        .btn-renew { background: #0ea5e9; color: white; }
+        .btn-renew:hover { background: #0284c7; }
+        .btn-upgrade-live { background: #8b5cf6; color: white; }
+        .btn-upgrade-live:hover { background: #7c3aed; }
     </style>
 
     <div class="basic-dashboard-wrapper">
@@ -181,6 +199,20 @@ include('header.php');
         <p class="company-id-tag">Current Plan: <b><?= strtoupper($plan) ?></b></p>
 
         <div class="admin-grid">
+            <div class="admin-card subscription-card-status">
+                <div>
+                    <div class="card-icon">💳</div>
+                    <h3>Subscription Status</h3>
+                    <div class="sub-meta">Plan: <b><?= strtoupper($plan) ?></b></div>
+                    <div class="sub-meta">Expired: <b style="color: #ef4444;"><?= $formatted_expiry ?></b></div>
+                    <div class="sub-meta">Days Left: <b><?= $days_left ?? 0 ?> Days</b></div>
+                </div>
+                <div class="sub-btn-group">
+                    <a href="subscription/upgrade.php" class="btn-sub-action btn-renew"><i class="fa-solid fa-rotate"></i> Renew Plan</a>
+                    <a href="subscription/upgrade.php" class="btn-sub-action btn-upgrade-live"><i class="fa-solid fa-crown"></i> Upgrade</a>
+                </div>
+            </div>
+
             <div class="admin-card">
                 <div><div class="card-icon">🏢</div><h3>Company Profile</h3><p>Update your company details.</p></div>
                 <a href="company_profile.php" class="btn btn-primary">Open</a>
@@ -217,7 +249,6 @@ include('header.php');
     </div>
 
 <?php else: ?>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .dashboard-container { max-width: 1180px; margin: 0 auto; padding: 35px 24px 60px; font-family: 'Poppins', sans-serif; }
         .dashboard-welcome {
@@ -260,6 +291,19 @@ include('header.php');
             border-radius: 20px; padding: 25px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
             width: 100%; height: 500px; margin-top: 25px;
         }
+        
+        /* Premium Live Subscription Tracker styling */
+        .premium-sub-box {
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: #ffffff; padding: 20px; border-radius: 16px; margin-top: 15px;
+        }
+        .premium-sub-box p { margin: 6px 0; font-size: 13px; color: #cbd5e1; }
+        .premium-sub-box b { color: #38bdf8; }
+        .premium-sub-action-btn {
+            display: block; width: 100%; text-align: center; background: #8b5cf6; color: white;
+            padding: 10px; border-radius: 10px; text-decoration: none; font-size: 13px; font-weight: 600; margin-top: 15px; transition: 0.2s;
+        }
+        .premium-sub-action-btn:hover { background: #7c3aed; }
         
         @media (max-width: 1024px) {
             .stats-container { grid-template-columns: repeat(2, 1fr); }
@@ -367,6 +411,13 @@ include('header.php');
                         <a href="bookings/index.php" class="action-btn-link"><span>Review Applications</span><i class="fa-solid fa-arrow-right-long"></i></a>
                         <a href="calendar/index.php" class="action-btn-link"><span>Config Locked Dates</span><i class="fa-solid fa-arrow-right-long"></i></a>
                         <a href="package/index.php" class="action-btn-link"><span>Inventory Packages (<?= $total_packages ?>)</span><i class="fa-solid fa-arrow-right-long"></i></a>
+                    </div>
+
+                    <div class="premium-sub-box">
+                        <h4 style="margin: 0 0 10px 0; font-size: 14px; font-weight:700; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-credit-card" style="color:#38bdf8;"></i> Subscription Tracker</h4>
+                        <p>Expiry Date: <b style="color:#f87171;"><?= $formatted_expiry ?></b></p>
+                        <p>Remaining: <b><?= $days_left ?? 0 ?> Days</b></p>
+                        <a href="subscription/upgrade.php" class="premium-sub-action-btn"><i class="fa-solid fa-rotate"></i> Continue / Renew Plan</a>
                     </div>
                 </div>
             </div>
