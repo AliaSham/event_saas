@@ -22,6 +22,7 @@ $paymentQ = mysqli_query($conn, "
         b.id as booking_id,
         b.event_date,
         b.total_price,
+        b.payment_status AS booking_payment_status,
         c.company_name,
         c.subscription_status,
         pkg.package_name,
@@ -55,6 +56,9 @@ $vendorQ = mysqli_query($conn, "
     JOIN vendor_profiles vp ON u.id = vp.user_id
     WHERE bv.booking_id = '{$payment['booking_id']}'
 ");
+
+$is_fully_paid = ($payment['booking_payment_status'] == 'Paid');
+$display_remaining = $is_fully_paid ? 0.00 : $payment['remaining_amount'];
 ?>
 
 <!DOCTYPE html>
@@ -81,6 +85,11 @@ $vendorQ = mysqli_query($conn, "
             max-width: 1100px;
             margin: 0 auto;
             padding: 38px 35px 60px;
+        }
+
+        /* Nyorokkan print header daripada skrin biasa */
+        .print-only-header {
+            display: none;
         }
 
         .hero-detail {
@@ -147,10 +156,14 @@ $vendorQ = mysqli_query($conn, "
             font-size: 12px;
             opacity: .8;
             margin-bottom: 5px;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
         }
 
         .hero-mini-card strong {
             font-size: 22px;
+            font-weight: 800;
         }
 
         .summary-grid {
@@ -243,28 +256,17 @@ $vendorQ = mysqli_query($conn, "
             font-weight: 800;
         }
 
-        .status-badge.pending {
-            background: #fff7ed;
-            color: #c2410c;
-        }
-
-        .status-badge.completed {
-            background: #dcfce7;
-            color: #15803d;
-        }
-
-        .status-badge.failed {
-            background: #fee2e2;
-            color: #b91c1c;
-        }
+        .status-badge.pending { background: #fff7ed; color: #c2410c; }
+        .status-badge.partial { background: #e0f2fe; color: #0369a1; }
+        .status-badge.paid { background: #dcfce7; color: #15803d; }
+        .status-badge.failed { background: #fee2e2; color: #b91c1c; }
 
         .highlight-amount {
             color: #16a34a;
             font-size: 15px;
         }
 
-        .note-box,
-        .proof-box {
+        .note-box, .proof-box {
             margin-top: 18px;
             padding: 16px;
             border-radius: 18px;
@@ -272,19 +274,8 @@ $vendorQ = mysqli_query($conn, "
             border: 1px solid #e2e8f0;
         }
 
-        .note-box h4,
-        .proof-box h4 {
-            margin: 0 0 10px;
-            font-size: 14px;
-        }
-
-        .note-box p {
-            margin: 0;
-            font-size: 13px;
-            color: #334155;
-            line-height: 1.7;
-        }
-
+        .note-box h4, .proof-box h4 { margin: 0 0 10px; font-size: 14px; }
+        .note-box p { margin: 0; font-size: 13px; color: #334155; line-height: 1.7; }
         .proof-box a {
             display: inline-block;
             margin-top: 12px;
@@ -308,96 +299,147 @@ $vendorQ = mysqli_query($conn, "
             margin-bottom: 12px;
         }
 
-        .vendor-item strong {
-            font-size: 13px;
+        .vendor-item strong { font-size: 13px; }
+        .vendor-item small { color: #64748b; font-size: 11px; }
+        .vendor-price { font-weight: 800; color: #0b4d32; white-space: nowrap; }
+        .actions { margin-top: 10px; display: flex; gap: 12px; flex-wrap: wrap; }
+        .actions a, .actions button {
+            padding: 13px 20px; border: none; border-radius: 15px;
+            text-decoration: none; font-size: 13px; font-weight: 800;
+            cursor: pointer; transition: .25s ease;
         }
-
-        .vendor-item small {
-            color: #64748b;
-            font-size: 11px;
-        }
-
-        .vendor-price {
-            font-weight: 800;
-            color: #0b4d32;
-            white-space: nowrap;
-        }
-
-        .actions {
-            margin-top: 10px;
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .actions a,
-        .actions button {
-            padding: 13px 20px;
-            border: none;
-            border-radius: 15px;
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: .25s ease;
-        }
-
-        .actions .back {
-            background: white;
-            color: #0f172a;
-            border: 1px solid #cbd5e1;
-        }
-
-        .actions .print {
-            background: #06281b;
-            color: white;
-        }
-
-        .actions a:hover,
-        .actions button:hover,
-        .proof-box a:hover {
+        .actions .back { background: white; color: #0f172a; border: 1px solid #cbd5e1; }
+        .actions .print { background: #06281b; color: white; }
+        .actions a:hover, .actions button:hover, .proof-box a:hover {
             transform: translateY(-2px);
             box-shadow: 0 12px 25px rgba(15,23,42,.14);
         }
 
         @media (max-width: 900px) {
-            .summary-grid,
-            .detail-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .hero-content {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .hero-mini-card {
-                width: 100%;
-            }
+            .summary-grid, .detail-grid { grid-template-columns: 1fr; }
+            .hero-content { flex-direction: column; align-items: flex-start; }
+            .hero-mini-card { width: 100%; }
         }
 
+        /* ==========================================================================
+           MOD PRINTING BARU: DIROMBAK UNTUK JADI INVOIS/RESIT RASMI DAN BERSIH
+           ========================================================================== */
         @media print {
+            @page {
+                size: A4;
+                margin: 15mm 15mm 15mm 15mm;
+            }
+            
             body {
-                background: white;
+                background: #ffffff !important;
+                color: #000000 !important;
+                font-size: 12px !important;
             }
 
-            .hero-detail,
-            .actions,
-            header,
-            .sidebar {
+            /* Sembunyikan hiasan web dashboard */
+            .hero-detail, .actions, header, .sidebar, .back-link, .proof-box a {
                 display: none !important;
             }
 
-            .payment-details-container {
-                padding: 0;
-                max-width: 100%;
+            /* Paparkan header resit formal */
+            .print-only-header {
+                display: block !important;
+                border-bottom: 3px double #000000;
+                padding-bottom: 15px;
+                margin-bottom: 30px;
+            }
+            .print-only-header .receipt-title {
+                font-size: 26px;
+                font-weight: 800;
+                text-transform: uppercase;
+                color: #06281b;
+                margin: 0;
+            }
+            .print-only-header .company-sub {
+                font-size: 12px;
+                color: #475569;
+                margin-top: 4px;
+            }
+            .print-meta-table {
+                width: 100%;
+                margin-top: 15px;
+            }
+            .print-meta-table td {
+                padding: 3px 0;
+                font-size: 12px;
             }
 
-            .detail-section,
-            .summary-card {
-                box-shadow: none;
-                border: 1px solid #ddd;
+            .payment-details-container {
+                padding: 0 !important;
+                max-width: 100% !important;
             }
+
+            /* Tukar grid dashboard kepada susunan sebaris ke bawah */
+            .summary-grid {
+                grid-template-columns: repeat(3, 1fr) !important;
+                gap: 10px !important;
+                margin-bottom: 30px !important;
+            }
+
+            .summary-card {
+                background: #f8fafc !important;
+                border: 1px solid #cbd5e1 !important;
+                border-radius: 12px !important;
+                padding: 12px !important;
+                box-shadow: none !important;
+                text-align: center;
+            }
+            .summary-card span { color: #475569 !important; font-size: 10px !important; }
+            .summary-card strong { font-size: 16px !important; color: #000000 !important; }
+
+            /* Menghilangkan status badge berbentuk emoji sewaktu diprint */
+            .status-badge {
+                padding: 0 !important;
+                background: transparent !important;
+                color: #000000 !important;
+                font-size: 14px !important;
+                font-weight: 700 !important;
+            }
+
+            .detail-grid {
+                display: block !important;
+            }
+
+            .detail-section {
+                background: #ffffff !important;
+                border: 1px solid #cbd5e1 !important;
+                border-radius: 14px !important;
+                padding: 20px !important;
+                box-shadow: none !important;
+                margin-bottom: 20px !important;
+                page-break-inside: avoid; /* Mengelakkan maklumat terputus ke kertas sebelah */
+            }
+
+            .detail-section h3 {
+                font-size: 14px !important;
+                margin-bottom: 12px !important;
+                padding-bottom: 8px !important;
+                border-bottom: 2px solid #000000 !important;
+                color: #000000 !important;
+            }
+
+            .detail-row {
+                padding: 8px 0 !important;
+                border-bottom: 1px dashed #e2e8f0 !important;
+            }
+
+            .label { color: #475569 !important; font-size: 12px !important; }
+            .value { color: #000000 !important; font-size: 12px !important; font-weight: 700 !important; }
+
+            .vendor-item {
+                background: #f8fafc !important;
+                border: 1px solid #e2e8f0 !important;
+                padding: 10px !important;
+                border-radius: 10px !important;
+                box-shadow: none !important;
+            }
+            .vendor-price { color: #000000 !important; }
+            .note-box { background: #f8fafc !important; border: 1px solid #cbd5e1 !important; }
         }
     </style>
 </head>
@@ -408,6 +450,37 @@ $vendorQ = mysqli_query($conn, "
 
 <div class="payment-details-container">
 
+    <!-- HEADER FORMAL CETAKAN (Hanya muncul waktu print kertas) -->
+    <div class="print-only-header">
+        <table style="width: 100%;">
+            <tr>
+                <td>
+                    <h2 class="receipt-title">SaaSAdmin System</h2>
+                    <div class="company-sub">Official Payment Receipt / Invoice Statement</div>
+                </td>
+                <td style="text-align: right; vertical-align: top;">
+                    <div style="font-size: 11px; color: #64748b;">Printed On: <?= date('d M Y, H:i') ?></div>
+                </td>
+            </tr>
+        </table>
+        
+        <table class="print-meta-table">
+            <tr>
+                <td style="width: 15%;"><strong>Payment ID:</strong></td>
+                <td style="width: 35%;">#<?= $payment_id ?></td>
+                <td style="width: 15%;"><strong>Booking ID:</strong></td>
+                <td style="width: 35%;">#<?= $payment['booking_id'] ?></td>
+            </tr>
+            <tr>
+                <td><strong>Client Name:</strong></td>
+                <td><?= htmlspecialchars($payment['customer_name']) ?></td>
+                <td><strong>Event Date:</strong></td>
+                <td><?= date('d F Y', strtotime($payment['event_date'])) ?></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- HERO DASHBOARD (Disembunyikan automatik waktu print) -->
     <div class="hero-detail">
         <div class="hero-content">
             <div>
@@ -417,33 +490,52 @@ $vendorQ = mysqli_query($conn, "
             </div>
 
             <div class="hero-mini-card">
-                <span>Deposit Received</span>
-                <strong>RM <?= number_format($payment['deposit_amount'], 2) ?></strong>
+                <?php if ($is_fully_paid) { ?>
+                    <span>Total Paid</span>
+                    <strong>RM <?= number_format($payment['total_price'], 2) ?></strong>
+                <?php } else { ?>
+                    <span>Deposit Received</span>
+                    <strong>RM <?= number_format($payment['deposit_amount'], 2) ?></strong>
+                <?php } ?>
             </div>
         </div>
     </div>
 
+    <!-- KAD RINGKASAN AMAUN -->
     <div class="summary-grid">
         <div class="summary-card">
             <span>Total Amount</span>
-            <strong>RM <?= number_format($payment['amount'], 2) ?></strong>
+            <strong>RM <?= number_format($payment['total_price'], 2) ?></strong>
         </div>
 
         <div class="summary-card">
             <span>Remaining Balance</span>
-            <strong>RM <?= number_format($payment['remaining_amount'], 2) ?></strong>
+            <strong>RM <?= number_format($display_remaining, 2) ?></strong>
         </div>
 
         <div class="summary-card">
             <span>Payment Status</span>
-            <span class="status-badge <?= strtolower($payment['payment_status']) ?>">
-                <?= $payment['payment_status'] ?>
-            </span>
+            <?php 
+            if ($payment['payment_status'] == 'Failed') {
+                echo '<span class="status-badge failed">Failed</span>';
+            } else if ($payment['payment_status'] == 'Pending') {
+                echo '<span class="status-badge pending">Pending</span>';
+            } else {
+                if ($payment['booking_payment_status'] == 'Partial') {
+                    echo '<span class="status-badge partial">Deposit Paid</span>';
+                } else if ($payment['booking_payment_status'] == 'Paid') {
+                    echo '<span class="status-badge paid">Fully Paid</span>';
+                } else {
+                    echo '<span class="status-badge pending">Unpaid</span>';
+                }
+            }
+            ?>
         </div>
     </div>
 
     <div class="detail-grid">
 
+        <!-- KOTAK KIRI: MAKLUMAT PEMBAYARAN -->
         <div>
             <div class="detail-section">
                 <h3>💳 Payment Information</h3>
@@ -455,7 +547,7 @@ $vendorQ = mysqli_query($conn, "
 
                 <div class="detail-row">
                     <span class="label">Total Amount</span>
-                    <span class="value">RM <?= number_format($payment['amount'], 2) ?></span>
+                    <span class="value">RM <?= number_format($payment['total_price'], 2) ?></span>
                 </div>
 
                 <div class="detail-row">
@@ -465,7 +557,9 @@ $vendorQ = mysqli_query($conn, "
 
                 <div class="detail-row">
                     <span class="label">Remaining 90%</span>
-                    <span class="value">RM <?= number_format($payment['remaining_amount'], 2) ?></span>
+                    <span class="value">
+                        <?= $is_fully_paid ? 'RM 0.00 (Paid)' : 'RM ' . number_format($payment['remaining_amount'], 2) ?>
+                    </span>
                 </div>
 
                 <div class="detail-row">
@@ -497,7 +591,7 @@ $vendorQ = mysqli_query($conn, "
 
                 <?php if (!empty($payment['payment_proof_file'])) { ?>
                     <div class="proof-box">
-                        <h4>📸 Payment Proof</h4>
+                        <h4>📸 Payment Proof Document</h4>
                         <p style="margin:0;font-size:13px;color:#64748b;">
                             File: <strong><?= $payment['payment_proof_file'] ?></strong>
                         </p>
@@ -509,23 +603,24 @@ $vendorQ = mysqli_query($conn, "
             </div>
         </div>
 
+        <!-- KOTAK KANAN: PELANGGAN & TEMPAHAN -->
         <div>
             <div class="detail-section">
                 <h3>👤 Customer Information</h3>
 
                 <div class="detail-row">
                     <span class="label">Customer Name</span>
-                    <span class="value"><?= $payment['customer_name'] ?></span>
+                    <span class="value"><?= htmlspecialchars($payment['customer_name']) ?></span>
                 </div>
 
                 <div class="detail-row">
                     <span class="label">Email</span>
-                    <span class="value"><?= $payment['customer_email'] ?></span>
+                    <span class="value"><?= htmlspecialchars($payment['customer_email']) ?></span>
                 </div>
 
                 <div class="detail-row">
                     <span class="label">Phone</span>
-                    <span class="value"><?= $payment['customer_phone'] ?></span>
+                    <span class="value"><?= htmlspecialchars($payment['customer_phone']) ?></span>
                 </div>
             </div>
 
@@ -539,22 +634,22 @@ $vendorQ = mysqli_query($conn, "
 
                 <div class="detail-row">
                     <span class="label">Company</span>
-                    <span class="value"><?= $payment['company_name'] ?></span>
+                    <span class="value"><?= htmlspecialchars($payment['company_name']) ?></span>
                 </div>
 
                 <div class="detail-row">
                     <span class="label">Status</span>
-                    <span class="value"><?= $payment['subscription_status'] ?></span>
+                    <span class="value"><?= htmlspecialchars($payment['subscription_status']) ?></span>
                 </div>
 
                 <div class="detail-row">
                     <span class="label">Package</span>
-                    <span class="value"><?= $payment['package_name'] ?></span>
+                    <span class="value"><?= htmlspecialchars($payment['package_name']) ?></span>
                 </div>
 
                 <div class="detail-row">
                     <span class="label">Pax</span>
-                    <span class="value"><?= $payment['pax'] ?> pax</span>
+                    <span class="value"><?= htmlspecialchars($payment['pax']) ?> pax</span>
                 </div>
 
                 <div class="detail-row">
@@ -569,8 +664,8 @@ $vendorQ = mysqli_query($conn, "
                         <?php while ($vendor = mysqli_fetch_assoc($vendorQ)) { ?>
                             <div class="vendor-item">
                                 <div>
-                                    <strong><?= $vendor['vendor_name'] ?></strong><br>
-                                    <small><?= $vendor['service_type'] ?></small>
+                                    <strong><?= htmlspecialchars($vendor['vendor_name']) ?></strong><br>
+                                    <small><?= htmlspecialchars($vendor['service_type']) ?></small>
                                 </div>
                                 <div class="vendor-price">
                                     RM <?= number_format($vendor['price'], 2) ?>
@@ -584,6 +679,7 @@ $vendorQ = mysqli_query($conn, "
 
     </div>
 
+    <!-- BUTANG AKSI -->
     <div class="actions">
         <a href="payment_management.php" class="back">← Back to Management</a>
         <button onclick="window.print()" class="print">🖨️ Print Details</button>
