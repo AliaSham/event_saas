@@ -55,38 +55,38 @@ if (isset($_POST['register'])) {
 
     <div class="auth-left">
 
- <div class="brand-area">
+        <div class="brand-area">
 
-    <img src="/event_saas/assets/images/logo.png"
-         alt="Event SaaS Logo"
-         class="brand-logo">
+            <img src="/event_saas/assets/images/logo.png"
+                 alt="Event SaaS Logo"
+                 class="brand-logo">
 
-    <div class="brand-text-register">
+            <div class="brand-text-register">
 
-        <h2 class="page-heading">
-            Become a Vendor
-        </h2>
+                <h2 class="page-heading">
+                    Become a Vendor
+                </h2>
+
+            </div>
+
+        </div>
+
+        <h3>Grow Your Event Business</h3>
+
+        <p>
+            Join Event SaaS and connect with event companies,
+            manage bookings efficiently, and increase your
+            business opportunities through our platform.
+        </p>
+
+        <ul>
+            <li>✓ Receive Vendor Requests</li>
+            <li>✓ Manage Assigned Jobs</li>
+            <li>✓ Track Event Status</li>
+            <li>✓ Increase Business Visibility</li>
+        </ul>
 
     </div>
-
-</div>
-
-    <h3>Grow Your Event Business</h3>
-
-    <p>
-    Join Event SaaS and connect with event companies,
-    manage bookings efficiently, and increase your
-    business opportunities through our platform.
-    </p>
-
-    <ul>
-        <li>✓ Receive Vendor Requests</li>
-        <li>✓ Manage Assigned Jobs</li>
-        <li>✓ Track Event Status</li>
-        <li>✓ Increase Business Visibility</li>
-    </ul>
-
-</div>
 
     <div class="auth-card">
 
@@ -118,6 +118,23 @@ if (isset($_POST['register'])) {
                    placeholder="Enter Password" 
                    required>
 
+            <!-- ======================================================== -->
+            <!-- TAMBAHAN: Kotak Penanda Syarat & Privasi untuk Vendor     -->
+            <!-- ======================================================== -->
+            <div class="terms-checkbox-container" style="margin: 15px 0 20px 0; text-align: left;">
+                <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; font-size: 13px; color: #cbd5e1; line-height: 1.5;">
+                    <!-- Atribut 'required' memastikan vendor tidak boleh skip langkah ini -->
+                    <input type="checkbox" name="agree_terms" required style="margin-top: 3px; cursor: pointer; transform: scale(1.1);">
+                    <span>
+                       I agree to the 
+                        <a href="terms.php?from=vendor" target="_blank" style="color: #a78bfa; text-decoration: none; font-weight: 600;">Terms of Service</a> 
+                        and 
+                        <a href="privacy.php?from=vendor" target="_blank" style="color: #a78bfa; text-decoration: none; font-weight: 600;">Privacy Policy</a>.
+                    </span>
+                </label>
+            </div>
+            <!-- ======================================================== -->
+
             <button class="btn btn-primary" name="register">
                 Register
             </button>
@@ -137,6 +154,8 @@ if (isset($_POST['register'])) {
     </div>
 
 </div>
+
+<?php include('footer_auth.php'); ?>
 
 </body>
 </html>
