@@ -42,25 +42,25 @@ body{
 .customer-brand{
     display:flex;
     align-items:center;
-    gap:13px;
+    gap:0px;
     text-decoration:none;
 }
+.customer-logo{
 
-.brand-icon{
-    width:44px;
-    height:44px;
-    border-radius:16px;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    color:white;
-    font-size:20px;
-    background:linear-gradient(135deg,#1d4ed8,#7c3aed,#06b6d4);
-    box-shadow:0 12px 25px rgba(59,130,246,.35);
+    width:110px;
+    height:110px;
+
+    object-fit:contain;
+
+    filter:drop-shadow(
+        0 6px 12px rgba(0,0,0,.10)
+    );
+
 }
 
 .brand-text{
     line-height:1.1;
+    margin-left:-15px;
 }
 
 .brand-title{
@@ -148,14 +148,18 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
 <div class="customer-navbar">
 
-    <a href="/event_saas/customer/dashboard.php" class="customer-brand">
-        <div class="brand-icon">🎉</div>
+<a href="/event_saas/customer/dashboard.php" class="customer-brand">
 
-        <div class="brand-text">
-            <div class="brand-title">Event Booking</div>
-            <div class="brand-subtitle">Premium Event System</div>
-        </div>
-    </a>
+    <img src="/event_saas/assets/images/logo.png"
+         alt="Event Booking Logo"
+         class="customer-logo">
+
+    <div class="brand-text">
+        <div class="brand-title">Event Pro Booking</div>
+        <div class="brand-subtitle">Premium Event System</div>
+    </div>
+
+</a>
 
     <div class="customer-menu">
 

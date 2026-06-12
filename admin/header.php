@@ -82,13 +82,21 @@ if ($company_id && isset($conn)) {
         }
 
         .sidebar-brand {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 35px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 35px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 0px;
+}
+
+.sidebar-logo {
+    width: 90px;
+    height: 90px;
+    object-fit: contain;
+}
 
         .sidebar-brand span { color: var(--primary-color); }
 
@@ -308,7 +316,15 @@ $current_dir  = basename(dirname($_SERVER['PHP_SELF']));
 ?>
 
 <aside class="sidebar">
-    <div class="sidebar-brand">⚡ <span>SaaS</span>Admin</div>
+    <div class="sidebar-brand">
+
+    <img src="/event_saas/assets/images/logo2.png"
+         alt="Event Pro Logo"
+         class="sidebar-logo">
+
+    <span>Event</span>Pro
+
+</div>
     <div class="menu-section-label">Menu</div>
     <ul class="sidebar-menu">
         <li class="<?= ($current_file == 'dashboard.php' || $current_file == 'index.php' && $current_dir == 'admin') ? 'active-page' : '' ?>">
