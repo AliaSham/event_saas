@@ -84,8 +84,8 @@ $total_revenue = $data_revenue['total_revenue'] ?? 0;
 
 /* 📊 PERBAIKAN SQL STATUS: Menyesuaikan status mengikut standard database */
 if ($plan === 'premium') {
-    // Kira Pending Bookings
-    $query_pending = mysqli_query($conn, "SELECT COUNT(*) as total FROM bookings WHERE company_id = '$company_id' AND UPPER(status) = 'PENDING'");
+    // Kira Pending Action berdasarkan rekod pembayaran yang belum disahkan admin
+    $query_pending = mysqli_query($conn, "SELECT COUNT(*) as total FROM bookings WHERE company_id = '$company_id' AND (status LIKE '%pending%' OR payment_status LIKE '%pending%' OR payment_status LIKE '%waiting%')");
     $data_pending = mysqli_fetch_assoc($query_pending);
     $total_pending = $data_pending['total'] ?? 0;
 
