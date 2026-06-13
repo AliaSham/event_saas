@@ -10,6 +10,29 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'admin') {
 $user_id = $_SESSION['user_id'];
 $company_id = $_SESSION['company_id'];
 
+$analytics_url = "";
+
+switch($company_id){
+
+    // Glass Hall Premium
+    case 2:
+        $analytics_url = "https://datastudio.google.com/embed/reporting/107ea33c-d1cd-4995-97f7-15cf16a5e891/page/qUPyF";
+        break;
+
+    // Grand Harmony Premium
+    case 5:
+        $analytics_url = "https://datastudio.google.com/embed/reporting/2d26e5fc-9ff3-47ef-9839-19021bbbd73d/page/qUPyF";
+        break;
+
+    // Bloom Event Studio Premium
+    case 8:
+        $analytics_url = "https://datastudio.google.com/embed/reporting/9d75078c-c2e6-4b1f-bec5-4d9a4d3f4243/page/qUPyF";
+        break;
+
+    default:
+        $analytics_url = "about:blank";
+}
+
 $statusQuery = mysqli_query($conn, "
     SELECT subscription_status 
     FROM users 
@@ -954,7 +977,7 @@ include('header.php');
 
         <div class="analytics-frame">
             <iframe 
-                src="https://datastudio.google.com/embed/reporting/107ea33c-d1cd-4995-97f7-15cf16a5e891/page/qUPyF" 
+                 src="<?= $analytics_url ?>"
                 style="width:100%; height:100%; border:none;"
                 allowfullscreen>
             </iframe>

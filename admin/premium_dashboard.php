@@ -1,5 +1,6 @@
 <?php
 session_start();
+die("TEST123");
 include('../config/db.php');
 
 /* =========================
@@ -11,7 +12,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'admin') {
 }
 
 $company_id = $_SESSION['company_id'];
-
 /* =========================
    PLAN SECURITY
 ========================= */
@@ -20,6 +20,9 @@ $companyQuery = mysqli_query($conn, "
     FROM companies
     WHERE id = '$company_id'
 ");
+
+echo $_SESSION['company_id'];
+exit;
 
 $companyData = mysqli_fetch_assoc($companyQuery);
 
