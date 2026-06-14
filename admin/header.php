@@ -86,18 +86,21 @@ if ($company_id && isset($conn)) {
             z-index: 100;
         }
 
+        /* 🔥 PERUBAHAN BESAR: Menggabungkan simbol dan teks dalam saiz maksima & gah */
         .sidebar-brand {
-            font-size: 20px;
-            font-weight: 600;
+            font-size: 26px; /* Dibesarkan dari 20px ke 26px supaya teks menonjol */
+            font-weight: 700; /* Ditebalkan sedikit tulisan */
             margin-bottom: 35px;
             display: flex;
             align-items: center;
-            gap: 0px;
+            gap: 12px; /* Jarak harmoni antara imej logo dan teks */
+            color: #ffffff;
         }
 
+        /* 🔥 PERUBAHAN BESAR: Membesarkan saiz imej simbol */
         .sidebar-logo {
-            width: 90px;
-            height: 90px;
+            width: 50px;  /* Lebar dinaikkan untuk keseimbangan teks yang besar */
+            height: 50px; /* Tinggi diselaraskan agar kekal berbentuk sekata */
             object-fit: contain;
         }
 
@@ -218,12 +221,11 @@ if ($company_id && isset($conn)) {
             background: #f0faf4 !important;
             border: 1px solid #d1f0de !important;
             text-decoration: none;
-            position: relative; /* Ditambah untuk kedudukan badge */
+            position: relative;
             transition: background 0.15s ease, transform 0.12s ease;
         }
         .nav-icon:hover { background: #dcf5e7 !important; transform: translateY(-2px); }
 
-        /* [KEMAS KINI] Style untuk badge merah bilangan notifikasi unread */
         .badge-count {
             position: absolute;
             top: -5px;

@@ -93,13 +93,16 @@ $stmtPayments->bind_param("i", $company_id);
 $stmtPayments->execute();
 $paymentsQ = $stmtPayments->get_result();
 
-// --- 4. DATA STATISTIK UNTUK BADGE/CARD ---
+// --- 4. DATA STATISTIK UNTUK BADGE/CARD (🔥 FIX: Termasuk END untuk fungsi CASE WHEN) ---
 $statsQuery = "
     SELECT 
         b.payment_status AS b_status,
         p.payment_status AS p_status,
         COUNT(*) as count,
-        SUM(p.deposit_amount) as total_amount
+        SUM(CASE 
+            WHEN b.payment_status = 'Paid' AND p.payment_status = 'Completed' THEN p.amount 
+            ELSE p.deposit_amount 
+        END) as total_amount
     FROM payments p
     JOIN bookings b ON p.booking_id = b.id
     WHERE b.company_id = ?
@@ -118,13 +121,7 @@ $stats = [
     'Failed' => ['count' => 0, 'total_amount' => 0]
 ];
 
-$all_count = 0;
-$all_amount = 0;
-
 while ($stat = $statsResult->fetch_assoc()) {
-    $all_count += $stat['count'];
-    $all_amount += $stat['total_amount'];
-
     if ($stat['p_status'] == 'Pending') {
         $stats['Pending']['count'] += $stat['count'];
         $stats['Pending']['total_amount'] += $stat['total_amount'];
